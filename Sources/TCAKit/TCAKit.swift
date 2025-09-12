@@ -8,16 +8,56 @@ import Foundation
 
 /// TCAKit - A lightweight toolkit for The Composable Architecture
 ///
-/// TCAKit provides a collection of utilities, extensions, and common patterns
-/// to enhance your TCA-based applications with additional functionality and convenience.
-/// This is a standalone library with no external dependencies.
+/// TCAKit provides a simple, SwiftUI-first implementation of TCA patterns with
+/// one-way data flow, reducers, and effects. It's designed to be easy to drop
+/// into SwiftUI apps with low boilerplate and async/await support.
+///
+/// ## Core Components
+///
+/// - **Store**: Manages state and handles actions with @MainActor publishing
+/// - **Reducer**: Pure functions that handle actions and return effects
+/// - **Effect**: Represents async side effects with cancellation support
 ///
 /// ## Usage
 ///
 /// ```swift
 /// import TCAKit
 ///
-/// // Your TCA implementation using TCAKit utilities
+/// struct AppState {
+///     var count: Int = 0
+/// }
+///
+/// enum AppAction {
+///     case increment
+///     case decrement
+/// }
+///
+/// let store = Store(
+///     initialState: AppState(),
+///     reducer: { state, action in
+///         switch action {
+///         case .increment:
+///             state.count += 1
+///         case .decrement:
+///             state.count -= 1
+///         }
+///         return .none
+///     }
+/// )
+///
+/// // In SwiftUI
+/// struct ContentView: View {
+///     @StateObject private var store = store
+///     
+///     var body: some View {
+///         VStack {
+///             Text("Count: \(store.state.count)")
+///             Button("Increment") {
+///                 store.send(.increment)
+///             }
+///         }
+///     }
+/// }
 /// ```
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 public struct TCAKit {
