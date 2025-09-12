@@ -9,6 +9,7 @@ A lightweight, SwiftUI-first implementation of The Composable Architecture (TCA)
 - ⚡ **Effect**: Represents async side effects with cancellation support
 - 🔧 **Dependencies**: Environment-based dependency injection for services
 - 🎯 **WithStore**: SwiftUI helper for ergonomic store usage in views
+- 🧪 **TestStore**: Testing utility with fluent assertions and transcripts
 - 🎯 **SwiftUI-First**: Built specifically for SwiftUI with @MainActor integration
 - 📱 **Cross-platform**: iOS, macOS, tvOS, and watchOS support
 - 🚀 **Lightweight**: No external dependencies
@@ -305,6 +306,114 @@ struct MyView: View {
 - **Cleaner Code**: No global store dependencies
 - **Flexible**: Different store configurations per view
 - **TCA Aligned**: Follows standard TCA patterns
+
+### TestStore Testing Utility
+
+TCAKit provides `TestStore`, a powerful testing utility that makes it easy to test store behavior with fluent assertions and automatic transcript generation.
+
+#### Basic Testing
+
+```swift
+func testCounter() async throws {
+    let store = TestStore(
+        initialState: CounterState(count: 0),
+        reducer: counterReducer,
+        dependencies: Dependencies.test
+    )
+
+    await store
+        .send(.increment) { state in
+            state.count = 1
+        }
+        .send(.increment) { state in
+            state.count = 2
+        }
+        .send(.reset) { state in
+            state.count = 0
+        }
+        .finish()
+}
+```
+
+#### Effect Testing
+
+TestStore makes it easy to test async effects and their resulting state changes:
+
+```swift
+func testDataLoading() async throws {
+    let store = TestStore(
+        initialState: AppState(),
+        reducer: appReducer,
+        dependencies: Dependencies.test
+    )
+
+    await store
+        .send(.loadData) { state in
+            state.isLoading = true
+        }
+        .receive(.dataLoaded("test data")) { state in
+            state.isLoading = false
+            state.data = "test data"
+        }
+        .finish()
+}
+```
+
+#### Complex State Testing
+
+TestStore handles complex state changes and nested actions:
+
+```swift
+func testComplexFlow() async throws {
+    let store = TestStore(
+        initialState: AppState(),
+        reducer: appReducer,
+        dependencies: Dependencies.test
+    )
+
+    await store
+        .send(.counter(.increment)) { state in
+            state.counter.count = 1
+        }
+        .send(.loadData) { state in
+            state.isLoading = true
+        }
+        .receive(.dataLoaded("result")) { state in
+            state.isLoading = false
+            state.data = "result"
+        }
+        .send(.counter(.setMessage("Done"))) { state in
+            state.counter.message = "Done"
+        }
+        .finish()
+}
+```
+
+#### Test Transcripts
+
+TestStore automatically generates transcripts for debugging and documentation:
+
+```swift
+let transcript = await store
+    .send(.increment) { state in
+        state.count = 1
+    }
+    .finish()
+
+print(transcript.description)
+// Output:
+// Test Transcript:
+// 1. Send increment - State: CounterState(count: 0) → CounterState(count: 1)
+```
+
+#### Benefits of TestStore
+
+- **Fluent API**: Easy to read and write tests
+- **Automatic Transcripts**: Clear record of test execution
+- **State Assertions**: Built-in state change verification
+- **Effect Testing**: Proper async effect testing support
+- **Debugging**: Easy to see test failures and state changes
+- **Documentation**: Tests serve as living documentation
 
 ### Effect Cancellation
 

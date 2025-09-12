@@ -19,6 +19,7 @@ import Foundation
 /// - **Effect**: Represents async side effects with cancellation support
 /// - **Dependencies**: Environment-based dependency injection for services
 /// - **WithStore**: SwiftUI helper for ergonomic store usage in views
+/// - **TestStore**: Testing utility with fluent assertions and transcripts
 ///
 /// ## Usage
 ///

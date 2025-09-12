@@ -44,6 +44,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Scoped store support with `WithStore(store, state:action:content:)`
   - Store extension method `store.withStore(content:)`
   - Better testing with explicit store injection
+- **Testing Utilities**
+  - `TestStore` class for fluent store testing with assertions
+  - Automatic test transcript generation for debugging
+  - Fluent API: `send()` and `receive()` methods with state assertions
+  - Effect testing support for async operations
+  - Test step recording with timestamps and state changes
+  - Human-readable transcript descriptions
 - **Comprehensive Testing**
   - 20 test cases covering all core functionality
   - Store initialization and action handling tests
