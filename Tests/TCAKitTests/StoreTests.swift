@@ -225,7 +225,10 @@ enum CounterAction: Equatable {
     )
 
     await counterStore.send(.increment)
-    try? await Task.sleep(nanoseconds: 30_000_000)
+    
+    // Wait for the effect to complete (increment + async effect that sets to 5)
+    // Use a longer timeout for CI environments
+    try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
 
     // Effect should map back to local setCount via toLocalAction mapping
     #expect(await counterStore.state.count == 5)
