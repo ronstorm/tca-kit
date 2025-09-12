@@ -166,6 +166,73 @@ enum CounterAction: Equatable {
     #expect(await counterStore.state.count == 1) // Counter should remain unchanged
 }
 
+// swiftlint:disable function_body_length
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
+@Test func testScopedStoreEffectMapping() async throws {
+    struct AppState {
+        var counter: CounterState = CounterState()
+    }
+
+    enum AppAction {
+        case counter(CounterAction)
+        case loaded(Int)
+    }
+
+    let store = await Store<AppState, AppAction>(
+        initialState: AppState(),
+        reducer: { state, action in
+            switch action {
+            case .counter(let local):
+                switch local {
+                case .increment:
+                    state.counter.count += 1
+                    // Emit a parent-level effect that sets a value
+                    return Effect<AppAction>
+                        .task(
+                            operation: {
+                                try? await Task.sleep(nanoseconds: 10_000_000)
+                                return 5
+                            },
+                            transform: { .loaded($0) }
+                        )
+                case .decrement:
+                    state.counter.count -= 1
+                case .reset:
+                    state.counter.count = 0
+                case .setCount(let newCount):
+                    state.counter.count = newCount
+                }
+                return .none
+            case .loaded(let value):
+                state.counter.count = value
+                return .none
+            }
+        }
+    )
+
+    let counterStore = await store.scope(
+        state: \AppState.counter,
+        action: AppAction.counter,
+        toLocalAction: { (action: AppAction) -> CounterAction? in
+            // Map parent actions back to local where appropriate
+            switch action {
+            case .loaded(let value):
+                return .setCount(value)
+            case .counter:
+                return nil
+            }
+        }
+    )
+
+    await counterStore.send(.increment)
+    try? await Task.sleep(nanoseconds: 30_000_000)
+
+    // Effect should map back to local setCount via toLocalAction mapping
+    #expect(await counterStore.state.count == 5)
+    #expect(await store.state.counter.count == 5)
+}
+// swiftlint:enable function_body_length
+
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 @Test func testSimpleStore() async throws {
     let store = await Store<CounterState, CounterAction>.simple(
