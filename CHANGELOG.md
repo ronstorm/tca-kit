@@ -51,6 +51,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Effect testing support for async operations
   - Test step recording with timestamps and state changes
   - Human-readable transcript descriptions
+- **Combine Bridge**
+  - Seamless integration between Combine publishers and TCAKit effects
+  - Publisher to effect conversion with `eraseToEffect()` method
+  - Store to publisher bridging with `statePublisher` and `stateChangesPublisher`
+  - Action sending from publishers with `send(to:)` methods
+  - Effect creation from publishers with `Effect.fromPublisher()`
+  - Support for both non-failing and failing publishers
+  - Migration path for existing Combine-based code
 - **Comprehensive Testing**
   - 20 test cases covering all core functionality
   - Store initialization and action handling tests
