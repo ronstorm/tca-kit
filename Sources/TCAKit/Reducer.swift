@@ -14,9 +14,10 @@ import Foundation
 /// - Parameters:
 ///   - state: The current state (inout, will be modified)
 ///   - action: The action to handle
+///   - dependencies: The dependencies available to the reducer
 /// - Returns: An effect that can be run asynchronously
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
-public typealias Reducer<State, Action> = (inout State, Action) -> Effect<Action>
+public typealias Reducer<State, Action> = (inout State, Action, Dependencies) -> Effect<Action>
 
 /// A namespace for reducer utilities and helpers
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
@@ -28,11 +29,11 @@ public enum ReducerUtilities {
     public static func combine<State, Action>(
         _ reducers: Reducer<State, Action>...
     ) -> Reducer<State, Action> {
-        return { state, action in
+        return { state, action, dependencies in
             var combinedEffect: Effect<Action> = .none
 
             for reducer in reducers {
-                let effect = reducer(&state, action)
+                let effect = reducer(&state, action, dependencies)
                 // For now, we'll just return the last effect
                 // In a more complete implementation, we'd combine effects properly
                 combinedEffect = effect
@@ -50,11 +51,11 @@ public enum ReducerUtilities {
     /// - Returns: A reducer that only runs for the specified action type
     public static func forAction<State, Action>(
         _ action: Action,
-        reducer: @escaping (inout State, Action) -> Effect<Action>
+        reducer: @escaping (inout State, Action, Dependencies) -> Effect<Action>
     ) -> Reducer<State, Action> where Action: Equatable {
-        return { state, receivedAction in
+        return { state, receivedAction, dependencies in
             if receivedAction == action {
-                return reducer(&state, receivedAction)
+                return reducer(&state, receivedAction, dependencies)
             } else {
                 return .none
             }
@@ -69,13 +70,13 @@ public enum ReducerUtilities {
     /// - Returns: A reducer that transforms actions before processing
     public static func transform<State, Action, TransformedAction>(
         action transform: @escaping (Action) -> TransformedAction?,
-        reducer: @escaping (inout State, TransformedAction) -> Effect<Action>
+        reducer: @escaping (inout State, TransformedAction, Dependencies) -> Effect<Action>
     ) -> Reducer<State, Action> {
-        return { state, action in
+        return { state, action, dependencies in
             guard let transformedAction = transform(action) else {
                 return .none
             }
-            return reducer(&state, transformedAction)
+            return reducer(&state, transformedAction, dependencies)
         }
     }
 }
