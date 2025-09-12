@@ -26,6 +26,9 @@ public final class Store<State, Action>: ObservableObject {
     /// A task that handles running effects
     private var effectTask: Task<Void, Never>?
 
+    /// In-flight tasks keyed by cancellation id
+    private var inflightTasksByID: [AnyHashable: Task<Void, Never>] = [:]
+
     /// Creates a new store with initial state and a reducer
     ///
     /// - Parameters:
@@ -45,11 +48,26 @@ public final class Store<State, Action>: ObservableObject {
     public func send(_ action: Action) {
         let effect = reducer(&state, action)
 
-        // Cancel any existing effect task
-        effectTask?.cancel()
+        // Handle cancellation request effects
+        if effect.isCancellationRequest, let id = effect.cancellationId {
+            inflightTasksByID[id]?.cancel()
+            inflightTasksByID[id] = nil
+            return
+        }
+
+        // If the effect is associated with a cancellation id and requires cancelling in-flight
+        if let id = effect.cancellationId, effect.cancelInFlight {
+            inflightTasksByID[id]?.cancel()
+            inflightTasksByID[id] = nil
+        }
+
+        // Cancel previous single task behavior when no cancellation id is provided
+        if effect.cancellationId == nil {
+            effectTask?.cancel()
+        }
 
         // Run the new effect
-        effectTask = Task { [weak self] in
+        let task = Task { [weak self] in
             guard let self = self else { return }
 
             if let nextAction = await effect.run() {
@@ -57,6 +75,18 @@ public final class Store<State, Action>: ObservableObject {
                     self.send(nextAction)
                 }
             }
+
+            // Cleanup when finished
+            if let id = effect.cancellationId {
+                // Clear the task from the dictionary when it completes
+                self.inflightTasksByID[id] = nil
+            }
+        }
+
+        if let id = effect.cancellationId {
+            inflightTasksByID[id] = task
+        } else {
+            effectTask = task
         }
     }
 
@@ -108,6 +138,7 @@ public final class Store<State, Action>: ObservableObject {
 
     deinit {
         effectTask?.cancel()
+        inflightTasksByID.values.forEach { $0.cancel() }
     }
 }
 

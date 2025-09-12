@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Store Core Implementation (B-002)**
+- **Store Core Implementation**
   - `Store<State, Action>` class with @MainActor publishing
   - ObservableObject conformance for SwiftUI integration
   - Action dispatching with `send(_:)` method
@@ -24,20 +24,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `Reducer<State, Action>` type alias for pure functions
   - Reducer utilities: `combine()`, `forAction()`, `transform()`
   - State mutation through `inout` parameters
+- **Cancellation Helpers**
+  - `Effect.cancellable(id:cancelInFlight:)` to identify and optionally cancel in-flight work
+  - `Effect.cancel(id:)` to explicitly cancel effects by identifier
+  - Store-managed in-flight task tracking keyed by cancellation ID
 - **Comprehensive Testing**
-  - 17 test cases covering all core functionality
+  - 20 test cases covering all core functionality
   - Store initialization and action handling tests
   - Effect execution and chaining tests
+  - Cancellation behavior tests (cancel-in-flight, metadata)
   - Reducer utility tests
   - Store scoping functionality tests
 - **Documentation & Examples**
   - Updated README with practical usage examples
+  - Added cancellation usage examples and guidance
   - Counter example showing basic TCA patterns
   - Effect example demonstrating async operations
   - SwiftUI integration examples
 
 ### Changed
 - Updated README to reflect new Store core functionality
+- Updated Effect and Store to support identifier-based cancellation
 - Enhanced TCAKit.swift with comprehensive usage documentation
 
 ### Deprecated
