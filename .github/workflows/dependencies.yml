@@ -16,18 +16,13 @@ permissions:
 jobs:
   update-dependencies:
     name: Update Dependencies
-    runs-on: ubuntu-latest
+    runs-on: macos-15
     
     steps:
     - name: Checkout
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        
-    - name: Setup Swift
-      uses: slashmo/install-swift@v1
-      with:
-        version: "5.9"
         
     - name: Update Package Dependencies
       run: |
