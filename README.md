@@ -7,6 +7,7 @@ A lightweight, SwiftUI-first implementation of The Composable Architecture (TCA)
 - 🏪 **Store**: Manages state and handles actions with @MainActor publishing
 - 🔄 **Reducer**: Pure functions that handle actions and return effects  
 - ⚡ **Effect**: Represents async side effects with cancellation support
+- 🔧 **Dependencies**: Environment-based dependency injection for services
 - 🎯 **SwiftUI-First**: Built specifically for SwiftUI with @MainActor integration
 - 📱 **Cross-platform**: iOS, macOS, tvOS, and watchOS support
 - 🚀 **Lightweight**: No external dependencies
@@ -53,10 +54,11 @@ enum CounterAction {
     case reset
 }
 
-// Create your store
+// Create your store with dependencies
+let dependencies = Dependencies()
 let store = Store(
     initialState: CounterState(),
-    reducer: { state, action in
+    reducer: { state, action, dependencies in
         switch action {
         case .increment:
             state.count += 1
@@ -66,7 +68,8 @@ let store = Store(
             state.count = 0
         }
         return .none
-    }
+    },
+    dependencies: dependencies
 )
 
 // Use in SwiftUI
@@ -96,9 +99,10 @@ enum AppAction {
     case loadFailed
 }
 
+let dependencies = Dependencies()
 let store = Store(
     initialState: AppState(),
-    reducer: { state, action in
+    reducer: { state, action, dependencies in
         switch action {
         case .loadData:
             // Return an effect that loads data
@@ -116,7 +120,8 @@ let store = Store(
             state.error = "Failed to load data"
         }
         return .none
-    }
+    },
+    dependencies: dependencies
 )
 ```
 
@@ -135,9 +140,10 @@ enum AppAction {
   case loaded(Int)
 }
 
+let dependencies = Dependencies()
 let appStore = Store(
   initialState: AppState(),
-  reducer: { state, action in
+  reducer: { state, action, dependencies in
     switch action {
     case .counter(let local):
       switch local {
@@ -164,7 +170,8 @@ let appStore = Store(
       state.counter.count = value
       return .none
     }
-  }
+  },
+  dependencies: dependencies
 )
 
 // Child store that maps parent actions back to local actions for effects
@@ -182,6 +189,53 @@ let counterStore = await appStore.scope(
 )
 ```
 
+### Dependencies
+
+TCAKit provides a dependency injection system for services like date providers, UUID generators, and HTTP clients.
+
+```swift
+// Create dependencies
+let dependencies = Dependencies()
+
+// Use in reducer
+func appReducer(state: inout AppState, action: AppAction, dependencies: Dependencies) -> Effect<AppAction> {
+    switch action {
+    case .getCurrentTime:
+        let currentTime = dependencies.date()
+        state.timestamp = currentTime
+        return .none
+    case .generateId:
+        let newId = dependencies.uuid()
+        state.id = newId.uuidString
+        return .none
+    case .loadData:
+        return .task {
+            let url = URL(string: "https://api.example.com/data")!
+            let data = try await dependencies.httpClient(url)
+            return .dataLoaded(String(data: data, encoding: .utf8) ?? "")
+        }
+    case .dataLoaded(let data):
+        state.data = data
+        return .none
+    }
+}
+
+// For testing, use test dependencies
+let testDependencies = Dependencies.test
+let store = Store(
+    initialState: AppState(),
+    reducer: appReducer,
+    dependencies: testDependencies
+)
+
+// Or create custom mock dependencies
+let mockDependencies = Dependencies.mock(
+    date: { Date(timeIntervalSince1970: 0) },
+    uuid: { UUID(uuidString: "12345678-1234-1234-1234-123456789012")! },
+    httpClient: { _ in "mock data".data(using: .utf8)! }
+)
+```
+
 ### Effect Cancellation
 
 You can mark effects as cancellable by an identifier and optionally cancel in-flight work.
@@ -193,9 +247,10 @@ enum AppAction {
     case loaded(String)
 }
 
+let dependencies = Dependencies()
 let store = Store(
     initialState: AppState(),
-    reducer: { state, action in
+    reducer: { state, action, dependencies in
         switch action {
         case .load:
             return Effect<AppAction>
@@ -215,7 +270,8 @@ let store = Store(
             state.message = value
             return .none
         }
-    }
+    },
+    dependencies: dependencies
 )
 ```
 

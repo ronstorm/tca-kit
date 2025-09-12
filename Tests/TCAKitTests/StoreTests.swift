@@ -25,9 +25,10 @@ enum CounterAction: Equatable {
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 @Test func testStoreInitialization() async throws {
     let initialState = CounterState(count: 0)
+    let dependencies = Dependencies()
     let store = await Store<CounterState, CounterAction>(
         initialState: initialState,
-        reducer: { state, action in
+        reducer: { state, action, _ in
             switch action {
             case .increment:
                 state.count += 1
@@ -39,7 +40,8 @@ enum CounterAction: Equatable {
                 state.count = newCount
             }
             return .none
-        }
+        },
+        dependencies: dependencies
     )
 
     #expect(await store.state.count == 0)
@@ -47,9 +49,10 @@ enum CounterAction: Equatable {
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 @Test func testStoreActionHandling() async throws {
+    let dependencies = Dependencies()
     let store = await Store<CounterState, CounterAction>(
         initialState: CounterState(count: 0),
-        reducer: { state, action in
+        reducer: { state, action, _ in
             switch action {
             case .increment:
                 state.count += 1
@@ -61,7 +64,8 @@ enum CounterAction: Equatable {
                 state.count = newCount
             }
             return .none
-        }
+        },
+        dependencies: dependencies
     )
 
     // Test increment
@@ -83,9 +87,10 @@ enum CounterAction: Equatable {
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 @Test func testStoreWithEffects() async throws {
+    let dependencies = Dependencies()
     let store = await Store<CounterState, CounterAction>(
         initialState: CounterState(count: 0),
-        reducer: { state, action in
+        reducer: { state, action, _ in
             switch action {
             case .increment:
                 state.count += 1
@@ -99,7 +104,8 @@ enum CounterAction: Equatable {
                 state.count = newCount
             }
             return .none
-        }
+        },
+        dependencies: dependencies
     )
 
     // Send increment action, which should trigger another increment via effect
@@ -127,9 +133,10 @@ enum CounterAction: Equatable {
         case setMessage(String)
     }
 
+    let dependencies = Dependencies()
     let store = await Store<AppState, AppAction>(
         initialState: AppState(),
-        reducer: { state, action in
+        reducer: { state, action, _ in
             switch action {
             case .counter(let counterAction):
                 switch counterAction {
@@ -146,7 +153,8 @@ enum CounterAction: Equatable {
                 state.message = message
             }
             return .none
-        }
+        },
+        dependencies: dependencies
     )
 
     // Create a scoped store for just the counter
@@ -178,9 +186,10 @@ enum CounterAction: Equatable {
         case loaded(Int)
     }
 
+    let dependencies = Dependencies()
     let store = await Store<AppState, AppAction>(
         initialState: AppState(),
-        reducer: { state, action in
+        reducer: { state, action, _ in
             switch action {
             case .counter(let local):
                 switch local {
@@ -207,7 +216,8 @@ enum CounterAction: Equatable {
                 state.counter.count = value
                 return .none
             }
-        }
+        },
+        dependencies: dependencies
     )
 
     let counterStore = await store.scope(
@@ -225,7 +235,7 @@ enum CounterAction: Equatable {
     )
 
     await counterStore.send(.increment)
-    
+
     // Wait for the effect to complete (increment + async effect that sets to 5)
     // Use a longer timeout for CI environments
     try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
@@ -238,6 +248,7 @@ enum CounterAction: Equatable {
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 @Test func testSimpleStore() async throws {
+    let dependencies = Dependencies()
     let store = await Store<CounterState, CounterAction>.simple(
         initialState: CounterState(count: 0),
         reduce: { state, action in
@@ -251,7 +262,8 @@ enum CounterAction: Equatable {
             case .setCount(let newCount):
                 state.count = newCount
             }
-        }
+        },
+        dependencies: dependencies
     )
 
     await store.send(.increment)

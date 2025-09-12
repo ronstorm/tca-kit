@@ -11,7 +11,7 @@ import Testing
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 @Test func testReducerCombine() async throws {
-    let reducer1: Reducer<CounterState, CounterAction> = { state, action in
+    let reducer1: Reducer<CounterState, CounterAction> = { state, action, _ in
         switch action {
         case .increment:
             state.count += 1
@@ -21,7 +21,7 @@ import Testing
         return .none
     }
 
-    let reducer2: Reducer<CounterState, CounterAction> = { state, action in
+    let reducer2: Reducer<CounterState, CounterAction> = { state, action, _ in
         switch action {
         case .increment:
             state.count += 1 // Double increment
@@ -34,7 +34,8 @@ import Testing
     let combinedReducer = ReducerUtilities.combine(reducer1, reducer2)
 
     var state = CounterState(count: 0)
-    _ = combinedReducer(&state, .increment)
+    let dependencies = Dependencies()
+    _ = combinedReducer(&state, .increment, dependencies)
 
     #expect(state.count == 2) // Both reducers should run
     // Note: Effect equality is not implemented in this simple version
@@ -42,7 +43,7 @@ import Testing
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 @Test func testReducerForAction() async throws {
-    let reducer: Reducer<CounterState, CounterAction> = { state, action in
+    let reducer: Reducer<CounterState, CounterAction> = { state, action, _ in
         switch action {
         case .increment:
             state.count += 1
@@ -56,14 +57,15 @@ import Testing
     let specificReducer = ReducerUtilities.forAction(.increment, reducer: reducer)
 
     var state = CounterState(count: 0)
+    let dependencies = Dependencies()
 
     // Test matching action
-    _ = specificReducer(&state, .increment)
+    _ = specificReducer(&state, .increment, dependencies)
     #expect(state.count == 1)
     // Note: Effect equality is not implemented in this simple version
 
     // Test non-matching action
-    _ = specificReducer(&state, .decrement)
+    _ = specificReducer(&state, .decrement, dependencies)
     #expect(state.count == 1) // Should not change
     // Note: Effect equality is not implemented in this simple version
 }
@@ -74,7 +76,7 @@ import Testing
         case setText(String)
     }
 
-    let _: Reducer<CounterState, StringAction> = { state, action in
+    let _: Reducer<CounterState, StringAction> = { state, action, _ in
         switch action {
         case .setText(let text):
             state.count = text.count
@@ -91,7 +93,8 @@ import Testing
                 return nil
             }
         },
-        reducer: { (state: inout CounterState, action: StringAction) -> Effect<CounterAction> in
+        reducer: { (state: inout CounterState, action: StringAction, _: Dependencies)
+            -> Effect<CounterAction> in
             switch action {
             case .setText(let text):
                 state.count = text.count
@@ -101,14 +104,15 @@ import Testing
     )
 
     var state = CounterState(count: 0)
+    let dependencies = Dependencies()
 
     // Test transformable action
-    _ = transformedReducer(&state, CounterAction.setCount(42))
+    _ = transformedReducer(&state, CounterAction.setCount(42), dependencies)
     #expect(state.count == 2) // "42" has 2 characters
     // Note: Effect equality is not implemented in this simple version
 
     // Test non-transformable action
-    _ = transformedReducer(&state, CounterAction.increment)
+    _ = transformedReducer(&state, CounterAction.increment, dependencies)
     #expect(state.count == 2) // Should not change
     // Note: Effect equality is not implemented in this simple version
 }

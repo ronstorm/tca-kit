@@ -24,6 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `Reducer<State, Action>` type alias for pure functions
   - Reducer utilities: `combine()`, `forAction()`, `transform()`
   - State mutation through `inout` parameters
+- **Dependencies System**
+  - `Dependencies` struct for environment-based dependency injection
+  - Built-in services: `date()`, `uuid()`, `httpClient()`
+  - Test helpers: `Dependencies.test` and `Dependencies.mock()`
+  - Immutable updates with `.with()` method
+  - No singleton pattern - explicit dependency injection
 - **Cancellation Helpers**
   - `Effect.cancellable(id:cancelInFlight:)` to identify and optionally cancel in-flight work
   - `Effect.cancel(id:)` to explicitly cancel effects by identifier

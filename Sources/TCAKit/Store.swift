@@ -23,6 +23,9 @@ public final class Store<State, Action>: ObservableObject {
     /// The reducer function that handles actions and updates state
     private let reducer: Reducer<State, Action>
 
+    /// The dependencies available to the reducer
+    private let dependencies: Dependencies
+
     /// A task that handles running effects
     private var effectTask: Task<Void, Never>?
 
@@ -34,19 +37,22 @@ public final class Store<State, Action>: ObservableObject {
     /// - Parameters:
     ///   - initialState: The initial state of the store
     ///   - reducer: The reducer function that handles actions
+    ///   - dependencies: The dependencies available to the reducer
     public init(
         initialState: State,
-        reducer: @escaping Reducer<State, Action>
+        reducer: @escaping Reducer<State, Action>,
+        dependencies: Dependencies
     ) {
         self.state = initialState
         self.reducer = reducer
+        self.dependencies = dependencies
     }
 
     /// Sends an action to the store for processing
     ///
     /// - Parameter action: The action to send
     public func send(_ action: Action) {
-        let effect = reducer(&state, action)
+        let effect = reducer(&state, action, dependencies)
 
         // Handle cancellation request effects
         if effect.isCancellationRequest, let id = effect.cancellationId {
@@ -102,10 +108,10 @@ public final class Store<State, Action>: ObservableObject {
     ) -> Store<LocalState, LocalAction> {
         let localStore = Store<LocalState, LocalAction>(
             initialState: toLocalState(state),
-            reducer: { localState, localAction in
+            reducer: { localState, localAction, dependencies in
                 // Update the parent state with the local state changes
                 let parentAction = fromLocalAction(localAction)
-                let effect = self.reducer(&self.state, parentAction)
+                let effect = self.reducer(&self.state, parentAction, dependencies)
 
                 // Update the local state to match the parent state
                 localState = toLocalState(self.state)
@@ -116,7 +122,8 @@ public final class Store<State, Action>: ObservableObject {
                     _ = await effect.run()
                     return nil
                 }
-            }
+            },
+            dependencies: dependencies
         )
 
         // Observe parent state changes and update local state
@@ -147,9 +154,9 @@ public final class Store<State, Action>: ObservableObject {
     ) -> Store<LocalState, LocalAction> {
         let localStore = Store<LocalState, LocalAction>(
             initialState: toLocalState(state),
-            reducer: { localState, localAction in
+            reducer: { localState, localAction, dependencies in
                 let parentAction = fromLocalAction(localAction)
-                let parentEffect = self.reducer(&self.state, parentAction)
+                let parentEffect = self.reducer(&self.state, parentAction, dependencies)
 
                 // Sync local state with parent
                 localState = toLocalState(self.state)
@@ -166,7 +173,8 @@ public final class Store<State, Action>: ObservableObject {
                     cancelInFlight: parentEffect.cancelInFlight,
                     isCancellationRequest: parentEffect.isCancellationRequest
                 )
-            }
+            },
+            dependencies: dependencies
         )
 
         // Observe parent state changes and update local state
@@ -198,17 +206,20 @@ extension Store {
     /// - Parameters:
     ///   - initialState: The initial state
     ///   - reduce: A closure that updates state based on actions
+    ///   - dependencies: The dependencies available to the reducer
     /// - Returns: A store with the specified reducer
     public static func simple(
         initialState: State,
-        reduce: @escaping (inout State, Action) -> Void
+        reduce: @escaping (inout State, Action) -> Void,
+        dependencies: Dependencies
     ) -> Store<State, Action> {
         return Store(
             initialState: initialState,
-            reducer: { state, action in
+            reducer: { state, action, _ in
                 reduce(&state, action)
                 return .none
-            }
+            },
+            dependencies: dependencies
         )
     }
 }

@@ -17,6 +17,7 @@ import Foundation
 /// - **Store**: Manages state and handles actions with @MainActor publishing
 /// - **Reducer**: Pure functions that handle actions and return effects
 /// - **Effect**: Represents async side effects with cancellation support
+/// - **Dependencies**: Environment-based dependency injection for services
 ///
 /// ## Usage
 ///
@@ -32,9 +33,10 @@ import Foundation
 ///     case decrement
 /// }
 ///
+/// let dependencies = Dependencies()
 /// let store = Store(
 ///     initialState: AppState(),
-///     reducer: { state, action in
+///     reducer: { state, action, dependencies in
 ///         switch action {
 ///         case .increment:
 ///             state.count += 1
@@ -42,13 +44,14 @@ import Foundation
 ///             state.count -= 1
 ///         }
 ///         return .none
-///     }
+///     },
+///     dependencies: dependencies
 /// )
 ///
 /// // In SwiftUI
 /// struct ContentView: View {
 ///     @StateObject private var store = store
-///     
+///
 ///     var body: some View {
 ///         VStack {
 ///             Text("Count: \(store.state.count)")

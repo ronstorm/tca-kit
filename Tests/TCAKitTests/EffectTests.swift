@@ -87,9 +87,10 @@ import Foundation
         case finished(Int)
     }
 
+    let dependencies = Dependencies()
     let store = await Store<Int, CancellationAction>(
         initialState: 0,
-        reducer: { state, action in
+        reducer: { state, action, _ in
             switch action {
             case let .start(delayMs, value):
                 return Effect<CancellationAction>
@@ -105,7 +106,8 @@ import Foundation
                 state = value
                 return .none
             }
-        }
+        },
+        dependencies: dependencies
     )
 
     // Start a slower effect
