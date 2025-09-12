@@ -8,6 +8,7 @@ A lightweight, SwiftUI-first implementation of The Composable Architecture (TCA)
 - 🔄 **Reducer**: Pure functions that handle actions and return effects  
 - ⚡ **Effect**: Represents async side effects with cancellation support
 - 🔧 **Dependencies**: Environment-based dependency injection for services
+- 🎯 **WithStore**: SwiftUI helper for ergonomic store usage in views
 - 🎯 **SwiftUI-First**: Built specifically for SwiftUI with @MainActor integration
 - 📱 **Cross-platform**: iOS, macOS, tvOS, and watchOS support
 - 🚀 **Lightweight**: No external dependencies
@@ -72,18 +73,20 @@ let store = Store(
     dependencies: dependencies
 )
 
-// Use in SwiftUI
+// Use in SwiftUI with WithStore
 struct CounterView: View {
-    @StateObject private var store = store
+    let store: Store<CounterState, CounterAction>
     
     var body: some View {
-        VStack {
-            Text("Count: \(store.state.count)")
-            
-            HStack {
-                Button("−") { store.send(.decrement) }
-                Button("Reset") { store.send(.reset) }
-                Button("+") { store.send(.increment) }
+        WithStore(store) { store in
+            VStack {
+                Text("Count: \(store.state.count)")
+                
+                HStack {
+                    Button("−") { store.send(.decrement) }
+                    Button("Reset") { store.send(.reset) }
+                    Button("+") { store.send(.increment) }
+                }
             }
         }
     }
@@ -235,6 +238,73 @@ let mockDependencies = Dependencies.mock(
     httpClient: { _ in "mock data".data(using: .utf8)! }
 )
 ```
+
+### WithStore SwiftUI Helper
+
+TCAKit provides `WithStore`, a SwiftUI helper that makes it easy to use stores in views with proper lifecycle management.
+
+```swift
+struct CounterView: View {
+    let store: Store<CounterState, CounterAction>
+    
+    var body: some View {
+        WithStore(store) { store in
+            VStack {
+                Text("Count: \(store.state.count)")
+                Button("Increment") {
+                    store.send(.increment)
+                }
+            }
+        }
+    }
+}
+```
+
+#### Scoped Stores with WithStore
+
+WithStore works seamlessly with scoped stores for better modularity:
+
+```swift
+struct AppView: View {
+    let store: Store<AppState, AppAction>
+    
+    var body: some View {
+        WithStore(store) { store in
+            VStack {
+                Text("App Message: \(store.state.message)")
+                
+                // Scoped store for counter
+                WithStore(store.scope(state: \.counter, action: AppAction.counter)) { counterStore in
+                    CounterView(store: counterStore)
+                }
+            }
+        }
+    }
+}
+```
+
+#### Store Extension
+
+You can also use the convenient `withStore` extension:
+
+```swift
+struct MyView: View {
+    let store: Store<MyState, MyAction>
+    
+    var body: some View {
+        store.withStore { store in
+            Text("State: \(store.state)")
+        }
+    }
+}
+```
+
+#### Benefits of WithStore
+
+- **Better Testing**: Easy to inject test stores into views
+- **Cleaner Code**: No global store dependencies
+- **Flexible**: Different store configurations per view
+- **TCA Aligned**: Follows standard TCA patterns
 
 ### Effect Cancellation
 

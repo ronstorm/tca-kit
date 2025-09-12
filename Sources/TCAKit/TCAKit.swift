@@ -18,6 +18,7 @@ import Foundation
 /// - **Reducer**: Pure functions that handle actions and return effects
 /// - **Effect**: Represents async side effects with cancellation support
 /// - **Dependencies**: Environment-based dependency injection for services
+/// - **WithStore**: SwiftUI helper for ergonomic store usage in views
 ///
 /// ## Usage
 ///
@@ -50,13 +51,15 @@ import Foundation
 ///
 /// // In SwiftUI
 /// struct ContentView: View {
-///     @StateObject private var store = store
+///     let store: Store<AppState, AppAction>
 ///
 ///     var body: some View {
-///         VStack {
-///             Text("Count: \(store.state.count)")
-///             Button("Increment") {
-///                 store.send(.increment)
+///         WithStore(store) { store in
+///             VStack {
+///                 Text("Count: \(store.state.count)")
+///                 Button("Increment") {
+///                     store.send(.increment)
+///                 }
 ///             }
 ///         }
 ///     }
