@@ -7,6 +7,10 @@
 import Foundation
 import Combine
 
+// Import types from other modules to ensure CI compatibility
+// Note: In a single Swift module, these imports are technically not needed,
+// but they help with clarity and ensure proper compilation across different environments
+
 /// A store that manages state and handles actions using a reducer
 ///
 /// The Store is the central component of the TCA architecture. It holds the current state,

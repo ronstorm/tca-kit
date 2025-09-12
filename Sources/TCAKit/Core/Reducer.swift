@@ -6,6 +6,10 @@
 
 import Foundation
 
+// Import types from other modules to ensure CI compatibility
+// Note: In a single Swift module, these imports are technically not needed,
+// but they help with clarity and ensure proper compilation across different environments
+
 /// A function that handles actions and returns effects
 ///
 /// Reducers are pure functions that describe how the current state should be updated
