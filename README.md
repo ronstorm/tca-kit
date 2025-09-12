@@ -120,6 +120,68 @@ let store = Store(
 )
 ```
 
+### Scoping (Child Stores) and Effect Mapping
+
+You can scope a parent store to a child feature so it sees only the relevant state and actions.
+An overload also lets you map parent effect outputs back into local actions.
+
+```swift
+struct AppState {
+  var counter: CounterState = .init()
+}
+
+enum AppAction {
+  case counter(CounterAction)
+  case loaded(Int)
+}
+
+let appStore = Store(
+  initialState: AppState(),
+  reducer: { state, action in
+    switch action {
+    case .counter(let local):
+      switch local {
+      case .increment:
+        state.counter.count += 1
+        // Parent effect emits a parent action
+        return Effect<AppAction>
+          .task(
+            operation: {
+              try? await Task.sleep(nanoseconds: 50_000_000)
+              return 5
+            },
+            transform: { .loaded($0) }
+          )
+      case .decrement:
+        state.counter.count -= 1
+      case .reset:
+        state.counter.count = 0
+      case .setCount(let value):
+        state.counter.count = value
+      }
+      return .none
+    case .loaded(let value):
+      state.counter.count = value
+      return .none
+    }
+  }
+)
+
+// Child store that maps parent actions back to local actions for effects
+let counterStore = await appStore.scope(
+  state: \AppState.counter,
+  action: AppAction.counter,
+  toLocalAction: { (action: AppAction) -> CounterAction? in
+    switch action {
+    case .loaded(let value):
+      return .setCount(value)
+    case .counter:
+      return nil
+    }
+  }
+)
+```
+
 ### Effect Cancellation
 
 You can mark effects as cancellable by an identifier and optionally cancel in-flight work.

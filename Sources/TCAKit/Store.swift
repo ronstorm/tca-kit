@@ -112,13 +112,60 @@ public final class Store<State, Action>: ObservableObject {
 
                 // Transform the effect to work with local actions
                 return Effect<LocalAction> {
-                    if await effect.run() != nil {
-                        // For now, we'll just return nil for scoped effects
-                        // In a more complete implementation, we'd handle action transformation
-                        return nil
-                    }
+                    // Without an extractor, we drop parent actions
+                    _ = await effect.run()
                     return nil
                 }
+            }
+        )
+
+        // Observe parent state changes and update local state
+        Task { [weak self, weak localStore] in
+            guard let self = self, let localStore = localStore else { return }
+
+            for await _ in self.$state.values {
+                await MainActor.run {
+                    localStore.state = toLocalState(self.state)
+                }
+            }
+        }
+
+        return localStore
+    }
+
+    /// Creates a scoped store that maps parent effects back into local actions using an extractor
+    ///
+    /// - Parameters:
+    ///   - toLocalState: Extracts local state from parent state
+    ///   - fromLocalAction: Embeds local actions into parent actions
+    ///   - toLocalAction: Extracts local actions from parent actions (used to localize effect outputs)
+    /// - Returns: A new store scoped to the local state and actions with effect localization
+    public func scope<LocalState, LocalAction>(
+        state toLocalState: @escaping (State) -> LocalState,
+        action fromLocalAction: @escaping (LocalAction) -> Action,
+        toLocalAction: @escaping (Action) -> LocalAction?
+    ) -> Store<LocalState, LocalAction> {
+        let localStore = Store<LocalState, LocalAction>(
+            initialState: toLocalState(state),
+            reducer: { localState, localAction in
+                let parentAction = fromLocalAction(localAction)
+                let parentEffect = self.reducer(&self.state, parentAction)
+
+                // Sync local state with parent
+                localState = toLocalState(self.state)
+
+                // Map parent effect's output back to a local action while preserving cancellation metadata
+                return Effect<LocalAction>(
+                    operation: {
+                        if let nextParent = await parentEffect.run(), let nextLocal = toLocalAction(nextParent) {
+                            return nextLocal
+                        }
+                        return nil
+                    },
+                    cancellationId: parentEffect.cancellationId,
+                    cancelInFlight: parentEffect.cancelInFlight,
+                    isCancellationRequest: parentEffect.isCancellationRequest
+                )
             }
         )
 

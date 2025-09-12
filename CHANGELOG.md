@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `Effect.cancellable(id:cancelInFlight:)` to identify and optionally cancel in-flight work
   - `Effect.cancel(id:)` to explicitly cancel effects by identifier
   - Store-managed in-flight task tracking keyed by cancellation ID
+- **Scoping API**
+  - `Store.scope(state:action:)` for child stores (state/action mapping)
+  - New overload: `Store.scope(state:action:toLocalAction:)` maps parent effect outputs back to local actions
+  - Tests covering effect mapping through scoped stores
 - **Comprehensive Testing**
   - 20 test cases covering all core functionality
   - Store initialization and action handling tests
