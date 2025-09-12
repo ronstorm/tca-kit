@@ -20,6 +20,7 @@ import Foundation
 /// - **Dependencies**: Environment-based dependency injection for services
 /// - **WithStore**: SwiftUI helper for ergonomic store usage in views
 /// - **TestStore**: Testing utility with fluent assertions and transcripts
+/// - **CombineBridge**: Seamless integration between Combine publishers and TCAKit effects
 ///
 /// ## Usage
 ///

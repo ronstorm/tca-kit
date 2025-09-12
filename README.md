@@ -10,6 +10,7 @@ A lightweight, SwiftUI-first implementation of The Composable Architecture (TCA)
 - 🔧 **Dependencies**: Environment-based dependency injection for services
 - 🎯 **WithStore**: SwiftUI helper for ergonomic store usage in views
 - 🧪 **TestStore**: Testing utility with fluent assertions and transcripts
+- 🔗 **CombineBridge**: Seamless integration between Combine publishers and TCAKit effects
 - 🎯 **SwiftUI-First**: Built specifically for SwiftUI with @MainActor integration
 - 📱 **Cross-platform**: iOS, macOS, tvOS, and watchOS support
 - 🚀 **Lightweight**: No external dependencies
@@ -414,6 +415,103 @@ print(transcript.description)
 - **Effect Testing**: Proper async effect testing support
 - **Debugging**: Easy to see test failures and state changes
 - **Documentation**: Tests serve as living documentation
+
+### Combine Bridge
+
+TCAKit provides seamless integration with Combine publishers, allowing you to use existing Combine-based code with TCAKit stores.
+
+#### Publisher to Effect Conversion
+
+Convert Combine publishers to TCAKit effects:
+
+```swift
+// Convert a simple publisher to an effect
+let effect = Just("Hello")
+    .map { AppAction.setMessage($0) }
+    .eraseToEffect()
+
+// Use in reducer
+func appReducer(state: inout AppState, action: AppAction, dependencies: Dependencies) -> Effect<AppAction> {
+    switch action {
+    case .loadData:
+        return dataPublisher
+            .map { .dataLoaded($0) }
+            .eraseToEffect()
+    }
+}
+```
+
+#### Failing Publishers
+
+Handle publishers that can fail:
+
+```swift
+func appReducer(state: inout AppState, action: AppAction, dependencies: Dependencies) -> Effect<AppAction> {
+    switch action {
+    case .loadData:
+        return networkPublisher
+            .map { .dataLoaded($0) }
+            .catch { error in
+                Just(.loadFailed(error.localizedDescription))
+            }
+            .eraseToEffect()
+    }
+}
+```
+
+#### Store to Publisher Bridge
+
+Convert TCAKit stores to Combine publishers:
+
+```swift
+// Get current state as a publisher
+let statePublisher = store.statePublisher
+    .map { $0.count }
+    .eraseToAnyPublisher()
+
+// Subscribe to state changes
+statePublisher
+    .sink { count in
+        print("Count changed to: \(count)")
+    }
+    .store(in: &cancellables)
+```
+
+#### Action Sending from Publishers
+
+Send actions to stores from Combine publishers:
+
+```swift
+// Direct action sending
+let cancellable = actionPublisher
+    .send(to: store)
+
+// With action transformation
+let cancellable = dataPublisher
+    .send(to: store) { data in
+        AppAction.dataLoaded(data)
+    }
+```
+
+#### Effect Creation from Publishers
+
+Create effects directly from publishers:
+
+```swift
+// From non-failing publisher
+let effect = Effect.fromPublisher(Just("test"))
+
+// From failing publisher
+let effect = Effect.fromPublisher(failingPublisher)
+```
+
+#### Benefits of Combine Bridge
+
+- **Migration Path**: Easy transition from Combine to TCAKit
+- **Legacy Code Support**: Use existing Combine-based services
+- **Gradual Adoption**: Mix Combine and TCAKit in the same app
+- **Familiar Patterns**: Keep using Combine where it makes sense
+- **Seamless Integration**: No breaking changes to existing code
 
 ### Effect Cancellation
 
