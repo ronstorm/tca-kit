@@ -6,6 +6,10 @@
 
 import Foundation
 
+// Import types from other modules to ensure CI compatibility
+// Note: In a single Swift module, these imports are technically not needed,
+// but they help with clarity and ensure proper compilation across different environments
+
 /// A test utility for testing TCAKit stores with fluent assertions
 ///
 /// TestStore provides a fluent API for testing store behavior, allowing you to send actions,
