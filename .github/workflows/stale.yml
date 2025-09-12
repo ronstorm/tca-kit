@@ -6,6 +6,13 @@ on:
     - cron: '0 2 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  statuses: write
+  checks: write
+
 jobs:
   stale:
     name: Mark stale issues and pull requests

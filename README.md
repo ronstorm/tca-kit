@@ -1,14 +1,16 @@
 # TCAKit
 
-A lightweight toolkit for The Composable Architecture (TCA) that provides utilities, extensions, and common patterns to enhance your TCA-based applications.
+A lightweight, SwiftUI-first implementation of The Composable Architecture (TCA) patterns with one-way data flow, reducers, and effects. Designed to be easy to drop into SwiftUI apps with low boilerplate and async/await support.
 
 ## Features
 
-- 🚀 **Lightweight**: No external dependencies
-- 🛠️ **Utilities**: Common TCA patterns and helpers
+- 🏪 **Store**: Manages state and handles actions with @MainActor publishing
+- 🔄 **Reducer**: Pure functions that handle actions and return effects  
+- ⚡ **Effect**: Represents async side effects with cancellation support
+- 🎯 **SwiftUI-First**: Built specifically for SwiftUI with @MainActor integration
 - 📱 **Cross-platform**: iOS, macOS, tvOS, and watchOS support
+- 🚀 **Lightweight**: No external dependencies
 - ⚡ **Modern Swift**: Swift 5.9+ with Concurrency support
-- 🔧 **Extensible**: Easy to add your own utilities
 
 ## Installation
 
@@ -33,18 +35,89 @@ Then add it to your target:
 
 ## Usage
 
+### Basic Counter Example
+
 ```swift
 import TCAKit
+import SwiftUI
 
-// Access the version
-print("TCAKit version: \(TCAKit.version)")
+// Define your state
+struct CounterState {
+    var count: Int = 0
+}
 
-// Initialize TCAKit
-let tcaKit = TCAKit()
+// Define your actions
+enum CounterAction {
+    case increment
+    case decrement
+    case reset
+}
 
-// Use utilities
-let patterns = TCAUtilities.Patterns.self
-let extensions = TCAUtilities.Extensions.self
+// Create your store
+let store = Store(
+    initialState: CounterState(),
+    reducer: { state, action in
+        switch action {
+        case .increment:
+            state.count += 1
+        case .decrement:
+            state.count -= 1
+        case .reset:
+            state.count = 0
+        }
+        return .none
+    }
+)
+
+// Use in SwiftUI
+struct CounterView: View {
+    @StateObject private var store = store
+    
+    var body: some View {
+        VStack {
+            Text("Count: \(store.state.count)")
+            
+            HStack {
+                Button("−") { store.send(.decrement) }
+                Button("Reset") { store.send(.reset) }
+                Button("+") { store.send(.increment) }
+            }
+        }
+    }
+}
+```
+
+### With Effects
+
+```swift
+enum AppAction {
+    case loadData
+    case dataLoaded(String)
+    case loadFailed
+}
+
+let store = Store(
+    initialState: AppState(),
+    reducer: { state, action in
+        switch action {
+        case .loadData:
+            // Return an effect that loads data
+            return .task(
+                operation: {
+                    // Simulate network request
+                    try await Task.sleep(nanoseconds: 1_000_000_000)
+                    return "Hello, World!"
+                },
+                transform: AppAction.dataLoaded
+            )
+        case .dataLoaded(let data):
+            state.message = data
+        case .loadFailed:
+            state.error = "Failed to load data"
+        }
+        return .none
+    }
+)
 ```
 
 ## Requirements

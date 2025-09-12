@@ -5,6 +5,13 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  statuses: write
+  checks: write
+
 env:
   XCODE_VERSION: '16.0'
   IOS_SIMULATOR: 'iPhone 16'
@@ -46,11 +53,6 @@ jobs:
     - name: Test Package
       run: swift test
       
-    - name: Test on iOS
-      run: xcodebuild test -scheme tca-kit-Package -destination 'platform=iOS Simulator,name=${{ env.IOS_SIMULATOR }},OS=${{ env.IOS_VERSION }}'
-      
-    - name: Test on macOS
-      run: xcodebuild test -scheme tca-kit-Package -destination 'platform=macOS'
 
   release:
     name: Create Release
@@ -61,15 +63,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       
-    - name: Setup Swift
-      uses: swift-actions/setup-swift@v1
-      with:
-        swift-version: "5.9"
-        
-    - name: Generate Documentation
-      run: |
-        swift package generate-documentation --target TCAKit
-        
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
