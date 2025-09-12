@@ -63,7 +63,7 @@ import Foundation
 public struct TCAKit {
     /// The current version of TCAKit
     public static let version = "1.0.0"
-    
+
     /// Initialize TCAKit
     public init() {}
 }
@@ -76,7 +76,7 @@ public enum TCAUtilities {
     public enum Patterns {
         // Future pattern implementations will go here
     }
-    
+
     /// TCA extensions and helpers
     public enum Extensions {
         // Future extension implementations will go here

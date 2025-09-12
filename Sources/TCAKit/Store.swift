@@ -19,13 +19,13 @@ import Combine
 public final class Store<State, Action>: ObservableObject {
     /// The current state of the store
     @Published public private(set) var state: State
-    
+
     /// The reducer function that handles actions and updates state
     private let reducer: Reducer<State, Action>
-    
+
     /// A task that handles running effects
     private var effectTask: Task<Void, Never>?
-    
+
     /// Creates a new store with initial state and a reducer
     ///
     /// - Parameters:
@@ -38,20 +38,20 @@ public final class Store<State, Action>: ObservableObject {
         self.state = initialState
         self.reducer = reducer
     }
-    
+
     /// Sends an action to the store for processing
     ///
     /// - Parameter action: The action to send
     public func send(_ action: Action) {
         let effect = reducer(&state, action)
-        
+
         // Cancel any existing effect task
         effectTask?.cancel()
-        
+
         // Run the new effect
         effectTask = Task { [weak self] in
             guard let self = self else { return }
-            
+
             if let nextAction = await effect.run() {
                 await MainActor.run {
                     self.send(nextAction)
@@ -59,7 +59,7 @@ public final class Store<State, Action>: ObservableObject {
             }
         }
     }
-    
+
     /// Creates a scoped store that only sees a portion of the parent state and actions
     ///
     /// - Parameters:
@@ -76,10 +76,10 @@ public final class Store<State, Action>: ObservableObject {
                 // Update the parent state with the local state changes
                 let parentAction = fromLocalAction(localAction)
                 let effect = self.reducer(&self.state, parentAction)
-                
+
                 // Update the local state to match the parent state
                 localState = toLocalState(self.state)
-                
+
                 // Transform the effect to work with local actions
                 return Effect<LocalAction> {
                     if await effect.run() != nil {
@@ -91,21 +91,21 @@ public final class Store<State, Action>: ObservableObject {
                 }
             }
         )
-        
+
         // Observe parent state changes and update local state
         Task { [weak self, weak localStore] in
             guard let self = self, let localStore = localStore else { return }
-            
+
             for await _ in self.$state.values {
                 await MainActor.run {
                     localStore.state = toLocalState(self.state)
                 }
             }
         }
-        
+
         return localStore
     }
-    
+
     deinit {
         effectTask?.cancel()
     }

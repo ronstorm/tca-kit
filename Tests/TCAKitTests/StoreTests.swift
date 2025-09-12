@@ -41,7 +41,7 @@ enum CounterAction: Equatable {
             return .none
         }
     )
-    
+
     #expect(await store.state.count == 0)
 }
 
@@ -63,19 +63,19 @@ enum CounterAction: Equatable {
             return .none
         }
     )
-    
+
     // Test increment
     await store.send(.increment)
     #expect(await store.state.count == 1)
-    
+
     // Test decrement
     await store.send(.decrement)
     #expect(await store.state.count == 0)
-    
+
     // Test setCount
     await store.send(.setCount(42))
     #expect(await store.state.count == 42)
-    
+
     // Test reset
     await store.send(.reset)
     #expect(await store.state.count == 0)
@@ -101,13 +101,13 @@ enum CounterAction: Equatable {
             return .none
         }
     )
-    
+
     // Send increment action, which should trigger another increment via effect
     await store.send(.increment)
-    
+
     // Wait a bit for the effect to run
     try await Task.sleep(nanoseconds: 100_000_000) // 100ms
-    
+
     // Should be 2 because the effect sent another increment
     // Note: This test might be flaky due to timing - in a real implementation
     // we'd have better effect testing utilities
@@ -121,12 +121,12 @@ enum CounterAction: Equatable {
         var counter: CounterState = CounterState()
         var message: String = "Hello"
     }
-    
+
     enum AppAction {
         case counter(CounterAction)
         case setMessage(String)
     }
-    
+
     let store = await Store<AppState, AppAction>(
         initialState: AppState(),
         reducer: { state, action in
@@ -148,18 +148,18 @@ enum CounterAction: Equatable {
             return .none
         }
     )
-    
+
     // Create a scoped store for just the counter
     let counterStore = await store.scope(
         state: \.counter,
         action: AppAction.counter
     )
-    
+
     // Test that the scoped store works
     await counterStore.send(.increment)
     #expect(await counterStore.state.count == 1)
     #expect(await store.state.counter.count == 1)
-    
+
     // Test that parent store changes are reflected in scoped store
     await store.send(.setMessage("Updated"))
     #expect(await store.state.message == "Updated")
@@ -183,10 +183,10 @@ enum CounterAction: Equatable {
             }
         }
     )
-    
+
     await store.send(.increment)
     #expect(await store.state.count == 1)
-    
+
     await store.send(.setCount(10))
     #expect(await store.state.count == 10)
 }

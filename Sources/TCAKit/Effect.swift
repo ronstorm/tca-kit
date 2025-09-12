@@ -37,14 +37,14 @@ extension Effect {
 public struct Effect<Action> {
     /// The underlying async operation that produces actions
     private let operation: () async -> Action?
-    
+
     /// Creates a new effect from an async operation
     ///
     /// - Parameter operation: An async closure that returns an optional action
     public init(_ operation: @escaping () async -> Action?) {
         self.operation = operation
     }
-    
+
     /// Executes the effect and returns the resulting action
     ///
     /// - Returns: The action produced by the effect, or nil if no action should be sent
@@ -61,7 +61,7 @@ extension Effect {
     public static var none: Effect {
         Effect { nil }
     }
-    
+
     /// Creates an effect that immediately sends a single action
     ///
     /// - Parameter action: The action to send
@@ -69,7 +69,7 @@ extension Effect {
     public static func send(_ action: Action) -> Effect {
         Effect { action }
     }
-    
+
     /// Creates an effect that sends multiple actions in sequence
     ///
     /// - Parameter actions: The actions to send
@@ -81,7 +81,7 @@ extension Effect {
             actions.first
         }
     }
-    
+
     /// Creates an effect that runs an async operation and maps the result to an action
     ///
     /// - Parameters:
@@ -102,7 +102,7 @@ extension Effect {
             }
         }
     }
-    
+
     /// Creates an effect that runs an async operation and maps the result to an action
     ///
     /// - Parameters:

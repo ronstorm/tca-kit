@@ -30,18 +30,18 @@ public enum ReducerUtilities {
     ) -> Reducer<State, Action> {
         return { state, action in
             var combinedEffect: Effect<Action> = .none
-            
+
             for reducer in reducers {
                 let effect = reducer(&state, action)
                 // For now, we'll just return the last effect
                 // In a more complete implementation, we'd combine effects properly
                 combinedEffect = effect
             }
-            
+
             return combinedEffect
         }
     }
-    
+
     /// Creates a reducer that only handles specific actions
     ///
     /// - Parameters:
@@ -60,7 +60,7 @@ public enum ReducerUtilities {
             }
         }
     }
-    
+
     /// Creates a reducer that transforms actions before passing them to another reducer
     ///
     /// - Parameters:

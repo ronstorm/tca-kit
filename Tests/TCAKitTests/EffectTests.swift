@@ -42,7 +42,7 @@ import Foundation
             .setCount(value)
         }
     )
-    
+
     let result = await effect.run()
     #expect(result == .setCount(42))
 }
@@ -58,7 +58,7 @@ import Foundation
             .setCount(value)
         }
     )
-    
+
     let result = await effect.run()
     #expect(result == .setCount(100))
 }
@@ -73,7 +73,7 @@ import Foundation
             .setCount(value)
         }
     )
-    
+
     let result = await effect.run()
     #expect(result == nil) // Should return nil on error
 }

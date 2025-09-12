@@ -20,7 +20,7 @@ import Testing
         }
         return .none
     }
-    
+
     let reducer2: Reducer<CounterState, CounterAction> = { state, action in
         switch action {
         case .increment:
@@ -30,12 +30,12 @@ import Testing
         }
         return .none
     }
-    
+
     let combinedReducer = ReducerUtilities.combine(reducer1, reducer2)
-    
+
     var state = CounterState(count: 0)
-    let _ = combinedReducer(&state, .increment)
-    
+    _ = combinedReducer(&state, .increment)
+
     #expect(state.count == 2) // Both reducers should run
     // Note: Effect equality is not implemented in this simple version
 }
@@ -52,18 +52,18 @@ import Testing
         }
         return .none
     }
-    
+
     let specificReducer = ReducerUtilities.forAction(.increment, reducer: reducer)
-    
+
     var state = CounterState(count: 0)
-    
+
     // Test matching action
-    let _ = specificReducer(&state, .increment)
+    _ = specificReducer(&state, .increment)
     #expect(state.count == 1)
     // Note: Effect equality is not implemented in this simple version
-    
+
     // Test non-matching action
-    let _ = specificReducer(&state, .decrement)
+    _ = specificReducer(&state, .decrement)
     #expect(state.count == 1) // Should not change
     // Note: Effect equality is not implemented in this simple version
 }
@@ -73,7 +73,7 @@ import Testing
     enum StringAction {
         case setText(String)
     }
-    
+
     let _: Reducer<CounterState, StringAction> = { state, action in
         switch action {
         case .setText(let text):
@@ -81,7 +81,7 @@ import Testing
         }
         return .none
     }
-    
+
     let transformedReducer: Reducer<CounterState, CounterAction> = ReducerUtilities.transform(
         action: { (action: CounterAction) -> StringAction? in
             switch action {
@@ -99,16 +99,16 @@ import Testing
             return .none
         }
     )
-    
+
     var state = CounterState(count: 0)
-    
+
     // Test transformable action
-    let _ = transformedReducer(&state, CounterAction.setCount(42))
+    _ = transformedReducer(&state, CounterAction.setCount(42))
     #expect(state.count == 2) // "42" has 2 characters
     // Note: Effect equality is not implemented in this simple version
-    
+
     // Test non-transformable action
-    let _ = transformedReducer(&state, CounterAction.increment)
+    _ = transformedReducer(&state, CounterAction.increment)
     #expect(state.count == 2) // Should not change
     // Note: Effect equality is not implemented in this simple version
 }
