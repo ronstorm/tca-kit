@@ -38,11 +38,28 @@ public struct Effect<Action> {
     /// The underlying async operation that produces actions
     private let operation: () async -> Action?
 
+    // MARK: Cancellation metadata
+
+    /// Optional identifier used by the Store to manage cancellation of in-flight effects
+    /// If set, the Store may cancel an existing task with the same identifier before starting this one
+    let cancellationId: AnyHashable?
+
+    /// Whether a previous in-flight effect with the same `cancellationId` should be cancelled
+    /// before starting this effect
+    let cancelInFlight: Bool
+
+    /// If true, this effect represents a cancellation request for the provided `cancellationId`
+    /// The Store will cancel the task (if any) and not run this effect's operation
+    let isCancellationRequest: Bool
+
     /// Creates a new effect from an async operation
     ///
     /// - Parameter operation: An async closure that returns an optional action
     public init(_ operation: @escaping () async -> Action?) {
         self.operation = operation
+        self.cancellationId = nil
+        self.cancelInFlight = false
+        self.isCancellationRequest = false
     }
 
     /// Executes the effect and returns the resulting action
@@ -117,5 +134,70 @@ extension Effect {
             let result = await operation()
             return transform(result)
         }
+    }
+
+    // MARK: - Cancellation helpers
+
+    /// Marks this effect as cancellable by the given identifier.
+    /// If `cancelInFlight` is true, the store will cancel any in-flight effect with the same id
+    /// before starting this one.
+    /// - Parameters:
+    ///   - id: A hashable identifier for this effect.
+    ///   - cancelInFlight: Whether to cancel an in-flight effect with the same id.
+    /// - Returns: A new effect carrying the cancellation metadata.
+    public func cancellable(id: AnyHashable, cancelInFlight: Bool = false) -> Effect {
+        var effect = self
+        // Rebuild effect to preserve operation but attach metadata
+        effect = Effect(effect.operation)
+        effect = effect.attachCancellation(id: id, cancelInFlight: cancelInFlight)
+        return effect
+    }
+
+    /// Creates an effect that represents a cancellation request for an in-flight effect with the given identifier.
+    /// - Parameter id: The identifier of the effect to cancel.
+    /// - Returns: An effect that will instruct the store to cancel the in-flight effect.
+    public static func cancel(id: AnyHashable) -> Effect {
+        var effect = Effect { nil }
+        effect = effect.asCancellationRequest(id: id)
+        return effect
+    }
+}
+
+// MARK: - Internal helpers (for Store integration)
+
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
+extension Effect {
+    /// Internal initializer for attaching cancellation metadata.
+    /// Not public API; used by the Store.
+    init(
+        operation: @escaping () async -> Action?,
+        cancellationId: AnyHashable?,
+        cancelInFlight: Bool,
+        isCancellationRequest: Bool
+    ) {
+        self.operation = operation
+        self.cancellationId = cancellationId
+        self.cancelInFlight = cancelInFlight
+        self.isCancellationRequest = isCancellationRequest
+    }
+
+    /// Attaches cancellation metadata to an effect.
+    func attachCancellation(id: AnyHashable, cancelInFlight: Bool) -> Effect {
+        Effect(
+            operation: self.operation,
+            cancellationId: id,
+            cancelInFlight: cancelInFlight,
+            isCancellationRequest: false
+        )
+    }
+
+    /// Converts this effect into a cancellation request for the given id.
+    func asCancellationRequest(id: AnyHashable) -> Effect {
+        Effect(
+            operation: self.operation,
+            cancellationId: id,
+            cancelInFlight: true,
+            isCancellationRequest: true
+        )
     }
 }

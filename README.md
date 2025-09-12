@@ -120,6 +120,43 @@ let store = Store(
 )
 ```
 
+### Effect Cancellation
+
+You can mark effects as cancellable by an identifier and optionally cancel in-flight work.
+
+```swift
+enum AppAction {
+    case load
+    case cancelLoad
+    case loaded(String)
+}
+
+let store = Store(
+    initialState: AppState(),
+    reducer: { state, action in
+        switch action {
+        case .load:
+            return Effect<AppAction>
+                .task(
+                    operation: {
+                        try? await Task.sleep(nanoseconds: 500_000_000)
+                        return "Result"
+                    },
+                    transform: AppAction.loaded
+                )
+                .cancellable(id: "load", cancelInFlight: true)
+
+        case .cancelLoad:
+            return .cancel(id: "load")
+
+        case .loaded(let value):
+            state.message = value
+            return .none
+        }
+    }
+)
+```
+
 ## Requirements
 
 - iOS 15.0+
