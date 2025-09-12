@@ -14,12 +14,12 @@ import Testing
 
 @Test func testTCAKitInitialization() async throws {
     // Test that TCAKit can be initialized
-    let tcaKit = TCAKit()
+    _ = TCAKit()
     #expect(TCAKit.version == "1.0.0")
 }
 
 @Test func testTCAUtilitiesStructure() async throws {
     // Test that TCAUtilities structure is accessible
-    let _ = TCAUtilities.Patterns.self
-    let _ = TCAUtilities.Extensions.self
+    _ = TCAUtilities.Patterns.self
+    _ = TCAUtilities.Extensions.self
 }

@@ -1,0 +1,67 @@
+name: Mark stale issues and pull requests
+
+on:
+  schedule:
+    # Run every day at 2:00 UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  stale:
+    name: Mark stale issues and pull requests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Mark stale issues and pull requests
+      uses: actions/stale@v9
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        stale-issue-message: |
+          This issue has been automatically marked as stale because it has not had recent activity. It will be closed if no further activity occurs.
+          
+          If you're still experiencing this issue, please:
+          1. Add a comment to keep it open
+          2. Provide more details about the issue
+          3. Check if it's already been resolved in newer versions
+          
+          Thank you for your contribution to TCAKit! 🚀
+        stale-pr-message: |
+          This pull request has been automatically marked as stale because it has not had recent activity. It will be closed if no further activity occurs.
+          
+          If you're still working on this PR, please:
+          1. Add a comment to keep it open
+          2. Push new commits
+          3. Request a review
+          
+          Thank you for your contribution to TCAKit! 🚀
+        close-issue-message: |
+          This issue has been automatically closed because it has been marked as stale and has not had recent activity.
+          
+          If you're still experiencing this issue, please open a new issue with:
+          - A clear description of the problem
+          - Steps to reproduce
+          - Expected vs actual behavior
+          - Environment details (Swift version, platform, etc.)
+          
+          Thank you for your contribution to TCAKit! 🚀
+        close-pr-message: |
+          This pull request has been automatically closed because it has been marked as stale and has not had recent activity.
+          
+          If you're still working on this feature, please open a new pull request with:
+          - A clear description of the changes
+          - Tests for new functionality
+          - Updated documentation
+          - Reference to the original issue (if applicable)
+          
+          Thank you for your contribution to TCAKit! 🚀
+        days-before-stale: 30
+        days-before-close: 7
+        stale-issue-label: 'stale'
+        stale-pr-label: 'stale'
+        exempt-issue-labels: 'bug,enhancement,help wanted,good first issue'
+        exempt-pr-labels: 'bug,enhancement,help wanted,good first issue'
+        only-issue-labels: ''
+        only-pr-labels: ''
+        operations-per-run: 100
+        remove-stale-when-updated: true
+        debug-only: false

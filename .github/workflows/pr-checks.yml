@@ -1,0 +1,102 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  pr-checks:
+    name: PR Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Setup Swift
+      uses: swift-actions/setup-swift@v1
+      with:
+        swift-version: "5.9"
+        
+    - name: Check PR Title
+      uses: amannn/action-semantic-pull-request@v5
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        types: |
+          feat
+          fix
+          docs
+          style
+          refactor
+          test
+          chore
+        requireScope: false
+        
+    - name: Check for Breaking Changes
+      run: |
+        if git log --oneline ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | grep -i "breaking\|!:"; then
+          echo "⚠️ Breaking changes detected in this PR"
+          echo "Please ensure the CHANGELOG.md is updated with breaking change information"
+        fi
+        
+    - name: Check Documentation
+      run: |
+        # Check if public APIs have documentation
+        if [ -f "Sources/TCAKit/TCAKit.swift" ]; then
+          if grep -q "public.*func\|public.*var\|public.*let" Sources/TCAKit/TCAKit.swift; then
+            if ! grep -q "///" Sources/TCAKit/TCAKit.swift; then
+              echo "⚠️ Public APIs should have documentation comments"
+              exit 1
+            fi
+          fi
+        fi
+        
+    - name: Check CHANGELOG
+      run: |
+        if [ -f "CHANGELOG.md" ]; then
+          if ! grep -q "## \[Unreleased\]" CHANGELOG.md; then
+            echo "⚠️ CHANGELOG.md should have an [Unreleased] section"
+            exit 1
+          fi
+        fi
+        
+    - name: Comment PR
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '❌ This PR failed some validation checks. Please review the workflow logs and fix the issues.'
+          })
+
+  size-check:
+    name: PR Size Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Check PR Size
+      run: |
+        CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | wc -l)
+        CHANGED_LINES=$(git diff --shortstat ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | awk '{print $4}' | sed 's/,//')
+        
+        echo "Changed files: $CHANGED_FILES"
+        echo "Changed lines: $CHANGED_LINES"
+        
+        if [ "$CHANGED_FILES" -gt 20 ]; then
+          echo "⚠️ This PR changes more than 20 files. Consider breaking it into smaller PRs."
+        fi
+        
+        if [ "$CHANGED_LINES" -gt 500 ]; then
+          echo "⚠️ This PR changes more than 500 lines. Consider breaking it into smaller PRs."
+        fi

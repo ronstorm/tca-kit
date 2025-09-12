@@ -43,6 +43,18 @@ This project and everyone participating in it is governed by our commitment to p
 - Swift 5.9+
 - Xcode 15+ (for iOS/macOS development)
 - Git
+- SwiftLint (optional, for code quality)
+
+### CI/CD
+
+This project uses GitHub Actions for continuous integration and deployment:
+
+- **CI Pipeline**: Runs on every push and pull request
+- **Code Quality**: SwiftLint, security scans, and dependency checks
+- **Testing**: Multi-platform testing (iOS, macOS, tvOS, watchOS)
+- **Documentation**: Automatic documentation generation
+- **Releases**: Automated releases with proper tagging
+- **Dependencies**: Automated dependency updates
 
 ### Building the Project
 
@@ -55,6 +67,9 @@ swift test
 
 # Build for release
 swift build -c release
+
+# Run SwiftLint (if installed)
+swiftlint
 ```
 
 ### Running Tests
@@ -164,6 +179,7 @@ For feature requests, please include:
 - Prefer **trailing commas** in multi-line collections
 - Use **meaningful names** for variables and functions
 - Add **doc comments** for public APIs
+- Run **SwiftLint** to ensure code quality (see `.swiftlint.yml` configuration)
 
 ### Code Organization
 
