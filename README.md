@@ -1,4 +1,12 @@
+<div align="center">
+
 # TCAKit
+
+[![Swift](https://img.shields.io/badge/Swift-5.9%20%7C%206.0%20%7C%206.1-blue.svg)](https://swift.org)
+[![Platforms](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS-blue.svg)](https://swift.org)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/ronstorm/tca-kit/releases)
+
+</div>
 
 A lightweight, SwiftUI-first implementation of The Composable Architecture (TCA) patterns with one-way data flow, reducers, and effects. Designed to be easy to drop into SwiftUI apps with low boilerplate and async/await support.
 

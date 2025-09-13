@@ -1,9 +1,10 @@
 name: Release
 
-on:
-  push:
-    tags:
-      - 'v*'
+# DISABLED: Using manual release script instead
+# on:
+#   push:
+#     tags:
+#       - 'v*'
 
 permissions:
   contents: read
