@@ -1,22 +1,19 @@
 # TodoList Example
 
-A comprehensive todo list app that demonstrates intermediate TCAKit patterns including CRUD operations, effects, dependencies, and error handling.
+A comprehensive todo list app demonstrating intermediate TCAKit patterns.
 
-## What This Example Teaches
+## What You'll Learn
 
-- **Complex State Management**: Managing arrays of items with different states
+- **Complex State Management**: Managing arrays and multiple states
 - **CRUD Operations**: Create, Read, Update, Delete operations
-- **Effects with Async Operations**: Simulating network requests and data persistence
-- **Dependency Injection**: Using custom services for data operations
-- **Error Handling**: Managing and displaying error states
-- **Loading States**: Showing loading indicators during async operations
-- **Form Handling**: Adding new todos with validation
-- **List Management**: Filtering and managing todo items
+- **Effects**: Async operations with loading states
+- **Extending Dependencies**: How to add custom services to TCAKit's Dependencies
+- **Dependency Injection**: Using custom services in reducers
+- **Error Handling**: Managing and displaying errors
 
-## The TodoList App
+## Features
 
-This example creates a full-featured todo list with:
-- **Add Todo**: Create new todo items with text input
+- **Add Todo**: Create new todo items
 - **Toggle Complete**: Mark todos as complete/incomplete
 - **Delete Todo**: Remove todos from the list
 - **Filter Todos**: Show all, active, or completed todos
@@ -24,22 +21,10 @@ This example creates a full-featured todo list with:
 - **Error Handling**: Handle and display errors
 - **Loading States**: Show loading indicators
 
-## Code Walkthrough
-
-### 1. Define the Models
+## Key Patterns
 
 ```swift
-struct Todo: Identifiable, Equatable {
-    let id: UUID
-    var text: String
-    var isCompleted: Bool
-    let createdAt: Date
-}
-```
-
-### 2. Define the State
-
-```swift
+// Complex State
 struct TodoListState {
     var todos: [Todo] = []
     var newTodoText: String = ""
@@ -47,135 +32,71 @@ struct TodoListState {
     var isLoading: Bool = false
     var errorMessage: String?
 }
-```
 
-The state includes:
-- Array of todos
-- Current text input for new todos
-- Filter selection
-- Loading state
-- Error message
-
-### 3. Define the Actions
-
-```swift
-enum TodoListAction {
-    case addTodo
-    case newTodoTextChanged(String)
-    case toggleTodo(UUID)
-    case deleteTodo(UUID)
-    case filterChanged(TodoFilter)
-    case loadTodos
-    case todosLoaded([Todo])
-    case saveTodos
-    case todosSaved
-    case errorOccurred(String)
-    case clearError
-}
-```
-
-### 4. Create Services
-
-```swift
-struct TodoService {
-    func loadTodos() async throws -> [Todo]
-    func saveTodos(_ todos: [Todo]) async throws
-}
-```
-
-### 5. Handle Effects
-
-```swift
+// Async Effects
 case .loadTodos:
     state.isLoading = true
     return .task {
         let todos = try await dependencies.todoService.loadTodos()
         return .todosLoaded(todos)
     }
-```
 
-## Key TCAKit Patterns
-
-### Effect Handling
-- Use `.task` for async operations
-- Handle success and error cases
-- Update loading states appropriately
-
-### Dependency Injection
-- Inject services through the Dependencies system
-- Use test dependencies for testing
-- Keep business logic separate from UI
-
-### Error Handling
-- Store error messages in state
-- Display errors in the UI
-- Provide ways to clear errors
-
-### Complex State Updates
-- Update arrays safely
-- Handle optional states
-- Maintain data consistency
-
-## Running the Example
-
-1. Copy the code from the TodoList files
-2. Add TCAKit as a dependency to your project
-3. Create a new SwiftUI view and paste the code
-4. Run the app and try all the features!
-
-## Features Demonstrated
-
-### Adding Todos
-- Text input with validation
-- Add button that creates new todos
-- Automatic text field clearing
-
-### Managing Todos
-- Toggle completion status
-- Delete todos with swipe actions
-- Visual feedback for completed items
-
-### Filtering
-- Filter by all, active, or completed
-- Dynamic list updates
-- Filter state persistence
-
-### Persistence
-- Simulated network requests
-- Loading indicators
-- Error handling and retry
-
-## Next Steps
-
-After understanding this example:
-- [WeatherApp Example](../WeatherApp/) - Learn about real network requests
-- Try adding features like editing todos, due dates, or categories
-- Experiment with different UI layouts and interactions
-
-## Common Patterns
-
-### Array Updates
-```swift
+// Array Updates
 case .toggleTodo(let id):
     if let index = state.todos.firstIndex(where: { $0.id == id }) {
         state.todos[index].isCompleted.toggle()
     }
-```
 
-### Async Effects
-```swift
-case .loadTodos:
-    return .task {
-        let todos = try await dependencies.todoService.loadTodos()
-        return .todosLoaded(todos)
+// Extending Dependencies
+extension Dependencies {
+    public var todoService: TodoServiceProtocol {
+        get { self[TodoServiceKey.self] }
+        set { self[TodoServiceKey.self] = newValue }
     }
+}
+
+private struct TodoServiceKey: DependencyKey {
+    static let defaultValue: TodoServiceProtocol = MockTodoService()
+}
+
+// Complete App (standalone)
+@main
+struct TodoListApp: App {
+    private let dependencies: Dependencies
+    private let store: Store<TodoListState, TodoListAction>
+    
+    init() {
+        // Mock service for demonstration
+        self.dependencies = Dependencies().with(\.todoService, MockTodoService())
+        self.store = Store(
+            initialState: TodoListState(),
+            reducer: todoListReducer,
+            dependencies: dependencies
+        )
+    }
+    
+    var body: some Scene {
+        WindowGroup {
+            TodoListView(store: store)
+        }
+    }
+}
 ```
 
-### Error Handling
-```swift
-case .errorOccurred(let message):
-    state.errorMessage = message
-    state.isLoading = false
-```
+## Running
 
-This example demonstrates how TCAKit scales to handle complex, real-world applications with multiple features and state management needs.
+**Option 1: Standalone App (Easiest)**
+1. Copy both `TodoList.swift` and `Models.swift` to your project
+2. Add TCAKit as a dependency
+3. Run immediately! (⌘+R)
+
+**Option 2: Integration**
+1. Copy both files into your existing app
+2. Add TCAKit as a dependency
+3. Update your `App.swift` to use `TodoListApp()`
+
+**Note**: Uses `MockTodoService` for demonstration - no real network calls needed!
+
+## Next Steps
+
+- [WeatherApp Example](../WeatherApp/) - Learn network requests and advanced patterns
