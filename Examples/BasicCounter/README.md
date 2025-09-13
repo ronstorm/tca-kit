@@ -56,13 +56,40 @@ struct CounterView: View {
         }
     }
 }
+
+// Complete App (standalone)
+@main
+struct CounterApp: App {
+    @StateObject private var store: Store<CounterState, CounterAction>
+    
+    init() {
+        let dependencies = Dependencies()
+        self._store = StateObject(wrappedValue: Store(
+            initialState: CounterState(),
+            reducer: counterReducer,
+            dependencies: dependencies
+        ))
+    }
+    
+    var body: some Scene {
+        WindowGroup {
+            CounterView(store: store)
+        }
+    }
+}
 ```
 
 ## Running
 
-1. Copy the code from `BasicCounter.swift`
+**Option 1: Standalone App (Easiest)**
+1. Copy `BasicCounter.swift` to your project
 2. Add TCAKit as a dependency
-3. Run the app!
+3. Run immediately! (⌘+R)
+
+**Option 2: Integration**
+1. Copy the code into your existing app
+2. Add TCAKit as a dependency
+3. Update your `App.swift` to use `CounterApp()`
 
 ## Next Steps
 

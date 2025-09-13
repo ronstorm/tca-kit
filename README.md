@@ -16,11 +16,11 @@ A lightweight, SwiftUI-first implementation of The Composable Architecture (TCA)
 - 🚀 **Lightweight**: No external dependencies
 - ⚡ **Modern Swift**: Swift 5.9+ with Concurrency support
 
-## Installation
+## Quick Start
 
-### Swift Package Manager
+### 1. Installation
 
-Add TCAKit to your project using Swift Package Manager:
+Add TCAKit to your project:
 
 ```swift
 dependencies: [
@@ -28,73 +28,44 @@ dependencies: [
 ]
 ```
 
-Then add it to your target:
-
-```swift
-.target(
-    name: "YourTarget",
-    dependencies: [.product(name: "TCAKit", package: "tca-kit")]
-)
-```
-
-### Xcode
-
-1. **File → Add Package Dependencies**
-2. **Enter URL**: `https://github.com/ronstorm/tca-kit.git`
-3. **Select version**: Latest or specific version
-4. **Add to target**: Your app target
-
-### Need Help?
-
-Having issues with setup? Check out our [Setup Guide](Examples/SETUP.md) for detailed instructions and troubleshooting.
-
-## Usage
-
-### Basic Counter Example
+### 2. Basic Usage
 
 ```swift
 import TCAKit
 import SwiftUI
 
-// Define your state
+// State
 struct CounterState {
     var count: Int = 0
 }
 
-// Define your actions
+// Actions
 enum CounterAction {
-    case increment
-    case decrement
-    case reset
+    case increment, decrement, reset
 }
 
-// Create your store with dependencies
-let dependencies = Dependencies()
-let store = Store(
-    initialState: CounterState(),
-    reducer: { state, action, dependencies in
-        switch action {
-        case .increment:
-            state.count += 1
-        case .decrement:
-            state.count -= 1
-        case .reset:
-            state.count = 0
-        }
-        return .none
-    },
-    dependencies: dependencies
-)
+// Reducer
+func counterReducer(
+    state: inout CounterState,
+    action: CounterAction,
+    dependencies: Dependencies
+) -> Effect<CounterAction> {
+    switch action {
+    case .increment: state.count += 1
+    case .decrement: state.count -= 1
+    case .reset: state.count = 0
+    }
+    return .none
+}
 
-// Use in SwiftUI with WithStore
+// SwiftUI View
 struct CounterView: View {
-    let store: Store<CounterState, CounterAction>
+    @ObservedObject var store: Store<CounterState, CounterAction>
     
     var body: some View {
         WithStore(store) { store in
             VStack {
                 Text("Count: \(store.state.count)")
-                
                 HStack {
                     Button("−") { store.send(.decrement) }
                     Button("Reset") { store.send(.reset) }
@@ -104,464 +75,60 @@ struct CounterView: View {
         }
     }
 }
-```
 
-### With Effects
-
-```swift
-enum AppAction {
-    case loadData
-    case dataLoaded(String)
-    case loadFailed
-}
-
-let dependencies = Dependencies()
-let store = Store(
-    initialState: AppState(),
-    reducer: { state, action, dependencies in
-        switch action {
-        case .loadData:
-            // Return an effect that loads data
-            return .task(
-                operation: {
-                    // Simulate network request
-                    try await Task.sleep(nanoseconds: 1_000_000_000)
-                    return "Hello, World!"
-                },
-                transform: AppAction.dataLoaded
-            )
-        case .dataLoaded(let data):
-            state.message = data
-        case .loadFailed:
-            state.error = "Failed to load data"
-        }
-        return .none
-    },
-    dependencies: dependencies
-)
-```
-
-### Scoping (Child Stores) and Effect Mapping
-
-You can scope a parent store to a child feature so it sees only the relevant state and actions.
-An overload also lets you map parent effect outputs back into local actions.
-
-```swift
-struct AppState {
-  var counter: CounterState = .init()
-}
-
-enum AppAction {
-  case counter(CounterAction)
-  case loaded(Int)
-}
-
-let dependencies = Dependencies()
-let appStore = Store(
-  initialState: AppState(),
-  reducer: { state, action, dependencies in
-    switch action {
-    case .counter(let local):
-      switch local {
-      case .increment:
-        state.counter.count += 1
-        // Parent effect emits a parent action
-        return Effect<AppAction>
-          .task(
-            operation: {
-              try? await Task.sleep(nanoseconds: 50_000_000)
-              return 5
-            },
-            transform: { .loaded($0) }
-          )
-      case .decrement:
-        state.counter.count -= 1
-      case .reset:
-        state.counter.count = 0
-      case .setCount(let value):
-        state.counter.count = value
-      }
-      return .none
-    case .loaded(let value):
-      state.counter.count = value
-      return .none
-    }
-  },
-  dependencies: dependencies
-)
-
-// Child store that maps parent actions back to local actions for effects
-let counterStore = await appStore.scope(
-  state: \AppState.counter,
-  action: AppAction.counter,
-  toLocalAction: { (action: AppAction) -> CounterAction? in
-    switch action {
-    case .loaded(let value):
-      return .setCount(value)
-    case .counter:
-      return nil
-    }
-  }
-)
-```
-
-### Dependencies
-
-TCAKit provides a dependency injection system for services like date providers, UUID generators, and HTTP clients.
-
-```swift
-// Create dependencies
-let dependencies = Dependencies()
-
-// Use in reducer
-func appReducer(state: inout AppState, action: AppAction, dependencies: Dependencies) -> Effect<AppAction> {
-    switch action {
-    case .getCurrentTime:
-        let currentTime = dependencies.date()
-        state.timestamp = currentTime
-        return .none
-    case .generateId:
-        let newId = dependencies.uuid()
-        state.id = newId.uuidString
-        return .none
-    case .loadData:
-        return .task {
-            let url = URL(string: "https://api.example.com/data")!
-            let data = try await dependencies.httpClient(url)
-            return .dataLoaded(String(data: data, encoding: .utf8) ?? "")
-        }
-    case .dataLoaded(let data):
-        state.data = data
-        return .none
-    }
-}
-
-// For testing, use test dependencies
-let testDependencies = Dependencies.test
-let store = Store(
-    initialState: AppState(),
-    reducer: appReducer,
-    dependencies: testDependencies
-)
-
-// Or create custom mock dependencies
-let mockDependencies = Dependencies.mock(
-    date: { Date(timeIntervalSince1970: 0) },
-    uuid: { UUID(uuidString: "12345678-1234-1234-1234-123456789012")! },
-    httpClient: { _ in "mock data".data(using: .utf8)! }
-)
-```
-
-### WithStore SwiftUI Helper
-
-TCAKit provides `WithStore`, a SwiftUI helper that makes it easy to use stores in views with proper lifecycle management.
-
-```swift
-struct CounterView: View {
-    let store: Store<CounterState, CounterAction>
+// Complete App
+@main
+struct CounterApp: App {
+    @StateObject private var store: Store<CounterState, CounterAction>
     
-    var body: some View {
-        WithStore(store) { store in
-            VStack {
-                Text("Count: \(store.state.count)")
-                Button("Increment") {
-                    store.send(.increment)
-                }
-            }
-        }
+    init() {
+        let dependencies = Dependencies()
+        self._store = StateObject(wrappedValue: Store(
+            initialState: CounterState(),
+            reducer: counterReducer,
+            dependencies: dependencies
+        ))
     }
-}
-```
-
-#### Scoped Stores with WithStore
-
-WithStore works seamlessly with scoped stores for better modularity:
-
-```swift
-struct AppView: View {
-    let store: Store<AppState, AppAction>
     
-    var body: some View {
-        WithStore(store) { store in
-            VStack {
-                Text("App Message: \(store.state.message)")
-                
-                // Scoped store for counter
-                WithStore(store.scope(state: \.counter, action: AppAction.counter)) { counterStore in
-                    CounterView(store: counterStore)
-                }
-            }
+    var body: some Scene {
+        WindowGroup {
+            CounterView(store: store)
         }
     }
 }
 ```
 
-#### Store Extension
+## Documentation
 
-You can also use the convenient `withStore` extension:
+📚 **[Complete Documentation](Docs/README.md)** - Comprehensive guide to TCAKit
 
-```swift
-struct MyView: View {
-    let store: Store<MyState, MyAction>
-    
-    var body: some View {
-        store.withStore { store in
-            Text("State: \(store.state)")
-        }
-    }
-}
-```
+### Core Concepts
+- **[Store](Docs/store.md)** - State management and action handling
+- **[Reducer](Docs/reducer.md)** - Pure functions for state updates
+- **[Effect](Docs/effect.md)** - Async side effects with cancellation
+- **[Dependencies](Docs/dependencies.md)** - Dependency injection system
+- **[SwiftUI Integration](Docs/swiftui-integration.md)** - Best practices for SwiftUI
 
-#### Benefits of WithStore
+## Examples
 
-- **Better Testing**: Easy to inject test stores into views
-- **Cleaner Code**: No global store dependencies
-- **Flexible**: Different store configurations per view
-- **TCA Aligned**: Follows standard TCA patterns
+Ready-to-run examples showcasing TCAKit patterns:
 
-### TestStore Testing Utility
+### 🎯 [BasicCounter](Examples/BasicCounter/) - **Start Here**
+Simple counter app demonstrating core TCAKit concepts.
+- **Files**: `BasicCounter.swift` (standalone app)
+- **Learn**: State, actions, reducers, SwiftUI integration
 
-TCAKit provides `TestStore`, a powerful testing utility that makes it easy to test store behavior with fluent assertions and automatic transcript generation.
+### 📝 [TodoList](Examples/TodoList/) - **Intermediate**
+Full-featured todo list with CRUD operations and effects.
+- **Files**: `TodoList.swift` + `Models.swift` (standalone app)
+- **Learn**: Complex state, async effects, extending Dependencies, error handling
 
-#### Basic Testing
+### 🌤️ [WeatherApp](Examples/WeatherApp/) - **Advanced**
+Weather app with network requests and real-world patterns.
+- **Files**: `WeatherApp.swift` + `Models.swift` (standalone app)
+- **Learn**: Network requests, effect cancellation, extending Dependencies, complex state
 
-```swift
-func testCounter() async throws {
-    let store = TestStore(
-        initialState: CounterState(count: 0),
-        reducer: counterReducer,
-        dependencies: Dependencies.test
-    )
-
-    await store
-        .send(.increment) { state in
-            state.count = 1
-        }
-        .send(.increment) { state in
-            state.count = 2
-        }
-        .send(.reset) { state in
-            state.count = 0
-        }
-        .finish()
-}
-```
-
-#### Effect Testing
-
-TestStore makes it easy to test async effects and their resulting state changes:
-
-```swift
-func testDataLoading() async throws {
-    let store = TestStore(
-        initialState: AppState(),
-        reducer: appReducer,
-        dependencies: Dependencies.test
-    )
-
-    await store
-        .send(.loadData) { state in
-            state.isLoading = true
-        }
-        .receive(.dataLoaded("test data")) { state in
-            state.isLoading = false
-            state.data = "test data"
-        }
-        .finish()
-}
-```
-
-#### Complex State Testing
-
-TestStore handles complex state changes and nested actions:
-
-```swift
-func testComplexFlow() async throws {
-    let store = TestStore(
-        initialState: AppState(),
-        reducer: appReducer,
-        dependencies: Dependencies.test
-    )
-
-    await store
-        .send(.counter(.increment)) { state in
-            state.counter.count = 1
-        }
-        .send(.loadData) { state in
-            state.isLoading = true
-        }
-        .receive(.dataLoaded("result")) { state in
-            state.isLoading = false
-            state.data = "result"
-        }
-        .send(.counter(.setMessage("Done"))) { state in
-            state.counter.message = "Done"
-        }
-        .finish()
-}
-```
-
-#### Test Transcripts
-
-TestStore automatically generates transcripts for debugging and documentation:
-
-```swift
-let transcript = await store
-    .send(.increment) { state in
-        state.count = 1
-    }
-    .finish()
-
-print(transcript.description)
-// Output:
-// Test Transcript:
-// 1. Send increment - State: CounterState(count: 0) → CounterState(count: 1)
-```
-
-#### Benefits of TestStore
-
-- **Fluent API**: Easy to read and write tests
-- **Automatic Transcripts**: Clear record of test execution
-- **State Assertions**: Built-in state change verification
-- **Effect Testing**: Proper async effect testing support
-- **Debugging**: Easy to see test failures and state changes
-- **Documentation**: Tests serve as living documentation
-
-### Combine Bridge
-
-TCAKit provides seamless integration with Combine publishers, allowing you to use existing Combine-based code with TCAKit stores.
-
-#### Publisher to Effect Conversion
-
-Convert Combine publishers to TCAKit effects:
-
-```swift
-// Convert a simple publisher to an effect
-let effect = Just("Hello")
-    .map { AppAction.setMessage($0) }
-    .eraseToEffect()
-
-// Use in reducer
-func appReducer(state: inout AppState, action: AppAction, dependencies: Dependencies) -> Effect<AppAction> {
-    switch action {
-    case .loadData:
-        return dataPublisher
-            .map { .dataLoaded($0) }
-            .eraseToEffect()
-    }
-}
-```
-
-#### Failing Publishers
-
-Handle publishers that can fail:
-
-```swift
-func appReducer(state: inout AppState, action: AppAction, dependencies: Dependencies) -> Effect<AppAction> {
-    switch action {
-    case .loadData:
-        return networkPublisher
-            .map { .dataLoaded($0) }
-            .catch { error in
-                Just(.loadFailed(error.localizedDescription))
-            }
-            .eraseToEffect()
-    }
-}
-```
-
-#### Store to Publisher Bridge
-
-Convert TCAKit stores to Combine publishers:
-
-```swift
-// Get current state as a publisher
-let statePublisher = store.statePublisher
-    .map { $0.count }
-    .eraseToAnyPublisher()
-
-// Subscribe to state changes
-statePublisher
-    .sink { count in
-        print("Count changed to: \(count)")
-    }
-    .store(in: &cancellables)
-```
-
-#### Action Sending from Publishers
-
-Send actions to stores from Combine publishers:
-
-```swift
-// Direct action sending
-let cancellable = actionPublisher
-    .send(to: store)
-
-// With action transformation
-let cancellable = dataPublisher
-    .send(to: store) { data in
-        AppAction.dataLoaded(data)
-    }
-```
-
-#### Effect Creation from Publishers
-
-Create effects directly from publishers:
-
-```swift
-// From non-failing publisher
-let effect = Effect.fromPublisher(Just("test"))
-
-// From failing publisher
-let effect = Effect.fromPublisher(failingPublisher)
-```
-
-#### Benefits of Combine Bridge
-
-- **Migration Path**: Easy transition from Combine to TCAKit
-- **Legacy Code Support**: Use existing Combine-based services
-- **Gradual Adoption**: Mix Combine and TCAKit in the same app
-- **Familiar Patterns**: Keep using Combine where it makes sense
-- **Seamless Integration**: No breaking changes to existing code
-
-### Effect Cancellation
-
-You can mark effects as cancellable by an identifier and optionally cancel in-flight work.
-
-```swift
-enum AppAction {
-    case load
-    case cancelLoad
-    case loaded(String)
-}
-
-let dependencies = Dependencies()
-let store = Store(
-    initialState: AppState(),
-    reducer: { state, action, dependencies in
-        switch action {
-        case .load:
-            return Effect<AppAction>
-                .task(
-                    operation: {
-                        try? await Task.sleep(nanoseconds: 500_000_000)
-                        return "Result"
-                    },
-                    transform: AppAction.loaded
-                )
-                .cancellable(id: "load", cancelInFlight: true)
-
-        case .cancelLoad:
-            return .cancel(id: "load")
-
-        case .loaded(let value):
-            state.message = value
-            return .none
-        }
-    },
-    dependencies: dependencies
-)
-```
+**Quick Start**: Copy any example files to your project, add TCAKit dependency, and run immediately! See [Examples/SETUP.md](Examples/SETUP.md) for detailed instructions.
 
 ## Requirements
 
@@ -570,7 +137,7 @@ let store = Store(
 - tvOS 15.0+
 - watchOS 8.0+
 - Swift 5.9+
-- Swift Concurrency support
+- SwiftUI
 
 ## License
 
@@ -583,7 +150,3 @@ Contributions are welcome! Please open an issue or submit a pull request on [Git
 ## Author
 
 Created by [Amit Sen](https://github.com/ronstorm)
-
----
-
-**Note**: This is a work in progress. More utilities and patterns will be added in future releases.

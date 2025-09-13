@@ -18,23 +18,36 @@ dependencies: [
 
 ## Run Examples
 
-### Option 1: Swift Playgrounds (Easiest)
+### Option 1: Standalone Apps (Easiest)
+All examples are complete, runnable apps with `@main` attribute:
+
+1. **Copy the example files** to your project
+2. **Add TCAKit dependency** (see above)
+3. **Run immediately!** (⌘+R)
+
+### Option 2: Swift Playgrounds
 1. Open Swift Playgrounds
 2. Create new playground
 3. Copy code from any example
 4. Run immediately!
 
-### Option 2: Xcode Project
-1. Create new iOS project
+### Option 3: Integration into Existing App
+1. Copy example code into your existing project
 2. Add TCAKit dependency (see above)
-3. Copy example code into your project
+3. Update your `App.swift` to use the example's app struct
 4. Run (⌘+R)
 
 ## Example Files
 
-- **BasicCounter**: Single file - copy `BasicCounter.swift`
-- **TodoList**: Two files - copy `TodoList.swift` + `Models.swift`
-- **WeatherApp**: Two files - copy `WeatherApp.swift` + `Models.swift`
+- **BasicCounter**: Single file - copy `BasicCounter.swift` (standalone app)
+- **TodoList**: Two files - copy `TodoList.swift` + `Models.swift` (standalone app)
+- **WeatherApp**: Two files - copy `WeatherApp.swift` + `Models.swift` (standalone app)
+
+## Important Notes
+
+- **All examples are standalone apps** with `@main` attribute - they can run independently
+- **TodoList and WeatherApp** use mock services for demonstration (no real network calls)
+- **Dependencies are pre-configured** - no additional setup needed for the examples
 
 ## Requirements
 

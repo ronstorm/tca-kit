@@ -7,7 +7,8 @@ A comprehensive todo list app demonstrating intermediate TCAKit patterns.
 - **Complex State Management**: Managing arrays and multiple states
 - **CRUD Operations**: Create, Read, Update, Delete operations
 - **Effects**: Async operations with loading states
-- **Dependency Injection**: Using custom services
+- **Extending Dependencies**: How to add custom services to TCAKit's Dependencies
+- **Dependency Injection**: Using custom services in reducers
 - **Error Handling**: Managing and displaying errors
 
 ## Features
@@ -45,13 +46,56 @@ case .toggleTodo(let id):
     if let index = state.todos.firstIndex(where: { $0.id == id }) {
         state.todos[index].isCompleted.toggle()
     }
+
+// Extending Dependencies
+extension Dependencies {
+    public var todoService: TodoServiceProtocol {
+        get { self[TodoServiceKey.self] }
+        set { self[TodoServiceKey.self] = newValue }
+    }
+}
+
+private struct TodoServiceKey: DependencyKey {
+    static let defaultValue: TodoServiceProtocol = MockTodoService()
+}
+
+// Complete App (standalone)
+@main
+struct TodoListApp: App {
+    private let dependencies: Dependencies
+    private let store: Store<TodoListState, TodoListAction>
+    
+    init() {
+        // Mock service for demonstration
+        self.dependencies = Dependencies().with(\.todoService, MockTodoService())
+        self.store = Store(
+            initialState: TodoListState(),
+            reducer: todoListReducer,
+            dependencies: dependencies
+        )
+    }
+    
+    var body: some Scene {
+        WindowGroup {
+            TodoListView(store: store)
+        }
+    }
+}
 ```
 
 ## Running
 
-1. Copy both `TodoList.swift` and `Models.swift`
+**Option 1: Standalone App (Easiest)**
+1. Copy both `TodoList.swift` and `Models.swift` to your project
 2. Add TCAKit as a dependency
-3. Run the app!
+3. Run immediately! (⌘+R)
+
+**Option 2: Integration**
+1. Copy both files into your existing app
+2. Add TCAKit as a dependency
+3. Update your `App.swift` to use `TodoListApp()`
+
+**Note**: Uses `MockTodoService` for demonstration - no real network calls needed!
 
 ## Next Steps
 
