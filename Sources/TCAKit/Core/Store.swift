@@ -55,6 +55,7 @@ public final class Store<State, Action>: ObservableObject {
     /// Sends an action to the store for processing
     ///
     /// - Parameter action: The action to send
+    @MainActor
     public func send(_ action: Action) {
         let effect = reducer(&state, action, dependencies)
 

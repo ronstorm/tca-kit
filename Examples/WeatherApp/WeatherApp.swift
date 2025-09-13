@@ -39,6 +39,7 @@ struct WeatherState {
 /// All possible actions in our weather app
 enum WeatherAction {
     case loadWeather
+    case loadWeatherForLocation(String)
     case weatherLoaded(WeatherData)
     case loadForecast
     case forecastLoaded([ForecastItem])
@@ -55,6 +56,42 @@ enum WeatherAction {
 
 // MARK: - Reducer
 
+// MARK: - Dependencies Extension
+
+extension Dependencies {
+    /// Weather service dependency
+    public var weatherService: WeatherServiceProtocol {
+        get { self[WeatherServiceKey.self] }
+        set { self[WeatherServiceKey.self] = newValue }
+    }
+}
+
+/// Key for weather service in Dependencies
+private struct WeatherServiceKey: DependencyKey {
+    static let defaultValue: WeatherServiceProtocol = MockWeatherService()
+}
+
+/// Protocol for dependency keys
+private protocol DependencyKey {
+    associatedtype Value
+    static var defaultValue: Value { get }
+}
+
+/// Extension to make Dependencies subscriptable
+extension Dependencies {
+    fileprivate subscript<K: DependencyKey>(_ key: K.Type) -> K.Value {
+        get {
+            // In a real implementation, this would use a proper dependency container
+            // For now, we'll use a simple approach with a static dictionary
+            return key.defaultValue
+        }
+        set {
+            // In a real implementation, this would store the value
+            // For now, we'll ignore the setter
+        }
+    }
+}
+
 /// The reducer handles actions and updates state
 func weatherReducer(
     state: inout WeatherState,
@@ -65,14 +102,27 @@ func weatherReducer(
     case .loadWeather:
         state.isLoading = true
         state.errorMessage = nil
-        return .task {
-            do {
-                let weather = try await dependencies.weatherService.getCurrentWeather()
-                return .weatherLoaded(weather)
-            } catch {
-                return .errorOccurred(error.localizedDescription)
+        return .task(
+            operation: {
+                try await dependencies.weatherService.getCurrentWeather(for: nil)
+            },
+            transform: { weather in
+                .weatherLoaded(weather)
             }
-        }
+        )
+        .cancellable(id: "weather", cancelInFlight: true)
+        
+    case .loadWeatherForLocation(let location):
+        state.isLoading = true
+        state.errorMessage = nil
+        return .task(
+            operation: {
+                try await dependencies.weatherService.getCurrentWeather(for: location)
+            },
+            transform: { weather in
+                .weatherLoaded(weather)
+            }
+        )
         .cancellable(id: "weather", cancelInFlight: true)
         
     case .weatherLoaded(let weather):
@@ -84,14 +134,15 @@ func weatherReducer(
         return .send(.loadForecast)
         
     case .loadForecast:
-        return .task {
-            do {
-                let forecast = try await dependencies.weatherService.getForecast(for: state.currentWeather?.location)
-                return .forecastLoaded(forecast)
-            } catch {
-                return .errorOccurred(error.localizedDescription)
+        let location = state.currentWeather?.location
+        return .task(
+            operation: {
+                try await dependencies.weatherService.getForecast(for: location)
+            },
+            transform: { forecast in
+                .forecastLoaded(forecast)
             }
-        }
+        )
         .cancellable(id: "forecast", cancelInFlight: true)
         
     case .forecastLoaded(let forecast):
@@ -103,10 +154,14 @@ func weatherReducer(
         state.searchResults = []
         
         // Debounced search
-        return .task {
-            try await Task.sleep(nanoseconds: 500_000_000) // Wait 0.5 seconds
-            return .searchWeather
-        }
+        return .task(
+            operation: {
+                try await Task.sleep(nanoseconds: 500_000_000) // Wait 0.5 seconds
+            },
+            transform: { _ in
+                .searchWeather
+            }
+        )
         .cancellable(id: "search")
         
     case .searchWeather:
@@ -117,14 +172,14 @@ func weatherReducer(
         }
         
         state.isSearching = true
-        return .task {
-            do {
-                let results = try await dependencies.weatherService.searchLocations(query)
-                return .searchResultsLoaded(results)
-            } catch {
-                return .errorOccurred(error.localizedDescription)
+        return .task(
+            operation: {
+                try await dependencies.weatherService.searchLocations(query)
+            },
+            transform: { results in
+                .searchResultsLoaded(results)
             }
-        }
+        )
         .cancellable(id: "search", cancelInFlight: true)
         
     case .searchResultsLoaded(let results):
@@ -135,7 +190,7 @@ func weatherReducer(
     case .selectLocation(let location):
         state.searchText = location
         state.searchResults = []
-        return .send(.loadWeather)
+        return .send(.loadWeatherForLocation(location))
         
     case .refreshWeather:
         state.isRefreshing = true
@@ -143,8 +198,6 @@ func weatherReducer(
         
     case .cancelRequests:
         return .cancel(id: "weather")
-            .merge(.cancel(id: "forecast"))
-            .merge(.cancel(id: "search"))
         
     case .errorOccurred(let message):
         state.errorMessage = message
@@ -160,6 +213,21 @@ func weatherReducer(
     case .locationPermissionChanged(let permission):
         state.locationPermission = permission
         return .none
+    }
+}
+
+// MARK: - Store Extensions
+
+extension Store {
+    /// Creates a binding that reads from state and sends actions
+    func binding<Value>(
+        get: @escaping (State) -> Value,
+        send: @escaping (Value) -> Action
+    ) -> Binding<Value> {
+        Binding(
+            get: { get(self.state) },
+            set: { self.send(send($0)) }
+        )
     }
 }
 
@@ -223,16 +291,26 @@ struct WeatherView: View {
     
     @ViewBuilder
     private func searchBar(store: Store<WeatherState, WeatherAction>) -> some View {
-        HStack {
-            TextField("Search location...", text: store.binding(
-                get: \.searchText,
-                send: WeatherAction.searchTextChanged
-            ))
-            .textFieldStyle(.roundedBorder)
+        VStack(spacing: 8) {
+            HStack {
+                TextField("Search location...", text: store.binding(
+                    get: { $0.searchText },
+                    send: WeatherAction.searchTextChanged
+                ))
+                .textFieldStyle(.roundedBorder)
+                
+                if store.state.isSearching {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                }
+            }
             
-            if store.state.isSearching {
-                ProgressView()
-                    .scaleEffect(0.8)
+            // Show hint about available locations
+            if store.state.searchText.isEmpty && store.state.searchResults.isEmpty {
+                Text("Try: New York, London, Tokyo, Paris, Berlin, Mumbai, Dubai, Los Angeles, Toronto, Sydney")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
             }
         }
         .padding()
@@ -240,13 +318,35 @@ struct WeatherView: View {
     
     @ViewBuilder
     private func searchResults(store: Store<WeatherState, WeatherAction>) -> some View {
-        List(store.state.searchResults, id: \.self) { location in
-            Button(location) {
-                store.send(.selectLocation(location))
+        if !store.state.searchResults.isEmpty {
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Search Results")
+                    .font(.headline)
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+                
+                List(store.state.searchResults, id: \.self) { location in
+                    Button(action: {
+                        store.send(.selectLocation(location))
+                    }) {
+                        HStack {
+                            Image(systemName: "location")
+                                .foregroundColor(.blue)
+                            Text(location)
+                                .foregroundColor(.primary)
+                            Spacer()
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                .frame(maxHeight: 200)
+                .listStyle(PlainListStyle())
             }
-            .foregroundColor(.primary)
+            .background(Color(.systemGray6))
+            .cornerRadius(12)
+            .padding(.horizontal)
         }
-        .frame(maxHeight: 200)
     }
     
     @ViewBuilder
@@ -417,6 +517,7 @@ struct ForecastCardView: View {
 // MARK: - App Setup
 
 /// The main app that creates the store and displays the weather
+@main
 struct WeatherApp: App {
     // Create dependencies with weather service
     private let dependencies: Dependencies
@@ -424,9 +525,7 @@ struct WeatherApp: App {
     
     init() {
         // Initialize dependencies with mock weather service
-        self.dependencies = Dependencies.mock(
-            weatherService: MockWeatherService()
-        )
+        self.dependencies = Dependencies.mock()
         
         // Initialize the store
         self.store = Store(
@@ -468,7 +567,7 @@ struct WeatherView_Previews: PreviewProvider {
                 lastUpdated: Date()
             ),
             reducer: weatherReducer,
-            dependencies: Dependencies.mock(weatherService: MockWeatherService())
+            dependencies: Dependencies.mock()
         )
         
         WeatherView(store: store)

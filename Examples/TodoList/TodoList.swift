@@ -99,14 +99,19 @@ func todoListReducer(
     case .loadTodos:
         state.isLoading = true
         state.errorMessage = nil
-        return .task {
-            do {
-                let todos = try await dependencies.todoService.loadTodos()
-                return .todosLoaded(todos)
-            } catch {
-                return .errorOccurred(error.localizedDescription)
+        return .task(
+            operation: {
+                do {
+                    let todos = try await dependencies.todoService.loadTodos()
+                    return todos
+                } catch {
+                    throw error
+                }
+            },
+            transform: { todos in
+                .todosLoaded(todos)
             }
-        }
+        )
         
     case .todosLoaded(let todos):
         state.todos = todos
@@ -114,14 +119,15 @@ func todoListReducer(
         return .none
         
     case .saveTodos:
-        return .task {
-            do {
-                try await dependencies.todoService.saveTodos(state.todos)
-                return .todosSaved
-            } catch {
-                return .errorOccurred(error.localizedDescription)
+        let todosToSave = state.todos
+        return .task(
+            operation: {
+                try await dependencies.todoService.saveTodos(todosToSave)
+            },
+            transform: { _ in
+                .todosSaved
             }
-        }
+        )
         
     case .todosSaved:
         return .none
@@ -298,9 +304,26 @@ struct TodoRowView: View {
     }
 }
 
+// MARK: - Store Extensions
+
+extension Store {
+    /// Creates a binding that reads from state and sends actions
+    func binding<Value>(
+        get: @escaping (State) -> Value,
+        send: @escaping (Value) -> Action
+    ) -> Binding<Value> {
+        Binding(
+            get: { get(self.state) },
+            set: { self.send(send($0)) }
+        )
+    }
+}
+
 // MARK: - App Setup
 
 /// The main app that creates the store and displays the todo list
+
+@main
 struct TodoListApp: App {
     // Create dependencies with todo service
     private let dependencies: Dependencies
@@ -308,9 +331,7 @@ struct TodoListApp: App {
     
     init() {
         // Initialize dependencies with mock todo service
-        self.dependencies = Dependencies.mock(
-            todoService: MockTodoService()
-        )
+        self.dependencies = Dependencies().with(\.todoService, MockTodoService())
         
         // Initialize the store
         self.store = Store(
@@ -341,7 +362,7 @@ struct TodoListView_Previews: PreviewProvider {
         let store = Store(
             initialState: TodoListState(todos: sampleTodos),
             reducer: todoListReducer,
-            dependencies: Dependencies.mock(todoService: MockTodoService())
+            dependencies: Dependencies().with(\.todoService, MockTodoService())
         )
         
         TodoListView(store: store)

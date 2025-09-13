@@ -46,7 +46,7 @@ func counterReducer(
 
 /// The main counter view
 struct CounterView: View {
-    let store: Store<CounterState, CounterAction>
+    @ObservedObject var store: Store<CounterState, CounterAction>
     
     var body: some View {
         WithStore(store) { store in
@@ -91,18 +91,19 @@ struct CounterView: View {
 // MARK: - App Setup
 
 /// The main app that creates the store and displays the counter
+@main
 struct CounterApp: App {
     // Create dependencies and store
-    private let dependencies = Dependencies()
-    private let store: Store<CounterState, CounterAction>
+    @StateObject private var store: Store<CounterState, CounterAction>
     
     init() {
         // Initialize the store with our reducer
-        self.store = Store(
+        let dependencies = Dependencies()
+        self._store = StateObject(wrappedValue: Store(
             initialState: CounterState(),
             reducer: counterReducer,
             dependencies: dependencies
-        )
+        ))
     }
     
     var body: some Scene {
