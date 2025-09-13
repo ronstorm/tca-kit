@@ -44,9 +44,9 @@ Then add it to your target:
 3. **Select version**: Latest or specific version
 4. **Add to target**: Your app target
 
-### Troubleshooting
+### Need Help?
 
-Having issues with dependency setup? Check out our [Dependency Setup Guide](Examples/DEPENDENCY_SETUP.md) for detailed instructions and common solutions.
+Having issues with setup? Check out our [Setup Guide](Examples/SETUP.md) for detailed instructions and troubleshooting.
 
 ## Usage
 
@@ -578,9 +578,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contributing
 
-Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
-
-We also have a [Code of Conduct](CODE_OF_CONDUCT.md) that all contributors are expected to follow.
+Contributions are welcome! Please open an issue or submit a pull request on [GitHub](https://github.com/ronstorm/tca-kit).
 
 ## Author
 
