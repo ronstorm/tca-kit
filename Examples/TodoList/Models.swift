@@ -5,12 +5,13 @@
 //  © 2024 Coding With Amit. All rights reserved.
 
 import Foundation
+import TCAKit
 
 // MARK: - Todo Model
 
 /// Represents a single todo item
-struct Todo: Identifiable, Equatable, Codable {
-    let id: UUID
+public struct Todo: Identifiable, Equatable, Codable {
+    public let id: UUID
     var text: String
     var isCompleted: Bool
     let createdAt: Date
@@ -26,7 +27,7 @@ struct Todo: Identifiable, Equatable, Codable {
 // MARK: - Todo Filter
 
 /// Filter options for displaying todos
-enum TodoFilter: String, CaseIterable {
+public enum TodoFilter: String, CaseIterable {
     case all = "All"
     case active = "Active"
     case completed = "Completed"
@@ -39,7 +40,7 @@ enum TodoFilter: String, CaseIterable {
 // MARK: - Todo Service Protocol
 
 /// Protocol for todo data operations
-protocol TodoServiceProtocol {
+public protocol TodoServiceProtocol {
     func loadTodos() async throws -> [Todo]
     func saveTodos(_ todos: [Todo]) async throws
 }
@@ -47,20 +48,17 @@ protocol TodoServiceProtocol {
 // MARK: - Mock Todo Service
 
 /// Mock implementation of TodoService for demonstration
-struct MockTodoService: TodoServiceProtocol {
-    private var todos: [Todo] = []
+public struct MockTodoService: TodoServiceProtocol {
+    private let defaultTodos: [Todo] = [
+        Todo(text: "Learn TCAKit basics", isCompleted: true),
+        Todo(text: "Build a todo app", isCompleted: false),
+        Todo(text: "Add persistence", isCompleted: false),
+        Todo(text: "Handle errors gracefully", isCompleted: true)
+    ]
     
-    init() {
-        // Initialize with some sample data
-        self.todos = [
-            Todo(text: "Learn TCAKit basics", isCompleted: true),
-            Todo(text: "Build a todo app", isCompleted: false),
-            Todo(text: "Add persistence", isCompleted: false),
-            Todo(text: "Handle errors gracefully", isCompleted: true)
-        ]
-    }
+    public init() {}
     
-    func loadTodos() async throws -> [Todo] {
+    public func loadTodos() async throws -> [Todo] {
         // Simulate network delay
         try await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
         
@@ -69,10 +67,10 @@ struct MockTodoService: TodoServiceProtocol {
             throw TodoServiceError.networkError("Failed to load todos")
         }
         
-        return todos
+        return defaultTodos
     }
     
-    func saveTodos(_ todos: [Todo]) async throws {
+    public func saveTodos(_ todos: [Todo]) async throws {
         // Simulate network delay
         try await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
         
@@ -81,23 +79,62 @@ struct MockTodoService: TodoServiceProtocol {
             throw TodoServiceError.networkError("Failed to save todos")
         }
         
-        self.todos = todos
+        // In a real implementation, this would save to a database or API
+        // For the mock, we just simulate the operation
+        print("Saved \(todos.count) todos")
     }
 }
 
 // MARK: - Todo Service Error
 
 /// Errors that can occur in todo operations
-enum TodoServiceError: LocalizedError {
+public enum TodoServiceError: LocalizedError {
     case networkError(String)
     case validationError(String)
     
-    var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .networkError(let message):
             return "Network Error: \(message)"
         case .validationError(let message):
             return "Validation Error: \(message)"
+        }
+    }
+}
+
+// MARK: - Dependencies Extension
+
+/// Extension to add todo service to Dependencies
+extension Dependencies {
+    /// Provides todo service functionality
+    public var todoService: TodoServiceProtocol {
+        get { self[TodoServiceKey.self] }
+        set { self[TodoServiceKey.self] = newValue }
+    }
+}
+
+/// Key for todo service in Dependencies
+private struct TodoServiceKey: DependencyKey {
+    static let defaultValue: TodoServiceProtocol = MockTodoService()
+}
+
+/// Protocol for dependency keys
+private protocol DependencyKey {
+    associatedtype Value
+    static var defaultValue: Value { get }
+}
+
+/// Extension to make Dependencies subscriptable
+extension Dependencies {
+    fileprivate subscript<K: DependencyKey>(_ key: K.Type) -> K.Value {
+        get {
+            // In a real implementation, this would use a proper dependency container
+            // For now, we'll use a simple approach with a static dictionary
+            return key.defaultValue
+        }
+        set {
+            // In a real implementation, this would store the value
+            // For now, we'll ignore the setter
         }
     }
 }

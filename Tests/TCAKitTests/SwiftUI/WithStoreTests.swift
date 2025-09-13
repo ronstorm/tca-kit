@@ -156,4 +156,54 @@ struct WithStoreTests {
         await store.send(.reset)
         #expect(await store.state.count == 0)
     }
+
+    @Test func testCounterExampleFunctionality() async throws {
+        let dependencies = Dependencies()
+        let store = await Store<CounterState, CounterAction>(
+            initialState: CounterState(count: 0),
+            reducer: { state, action, _ in
+                switch action {
+                case .increment:
+                    state.count += 1
+                case .decrement:
+                    state.count -= 1
+                case .reset:
+                    state.count = 0
+                case .setCount(let newCount):
+                    state.count = newCount
+                }
+                return .none
+            },
+            dependencies: dependencies
+        )
+
+        // Test the exact same flow as the BasicCounter example
+        #expect(await store.state.count == 0)
+        
+        // Test increment (like tapping + button)
+        await store.send(.increment)
+        #expect(await store.state.count == 1)
+        
+        // Test increment again
+        await store.send(.increment)
+        #expect(await store.state.count == 2)
+        
+        // Test decrement (like tapping - button)
+        await store.send(.decrement)
+        #expect(await store.state.count == 1)
+        
+        // Test reset (like tapping Reset button)
+        await store.send(.reset)
+        #expect(await store.state.count == 0)
+        
+        // Test multiple increments
+        await store.send(.increment)
+        await store.send(.increment)
+        await store.send(.increment)
+        #expect(await store.state.count == 3)
+        
+        // Test reset again
+        await store.send(.reset)
+        #expect(await store.state.count == 0)
+    }
 }

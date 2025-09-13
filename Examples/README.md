@@ -37,6 +37,11 @@ This directory contains comprehensive, runnable examples that showcase TCAKit's 
 
 ## Getting Started
 
+### 🚀 **Quick Start (Recommended)**
+- **[HOW_TO_RUN.md](HOW_TO_RUN.md)** - How to run the existing examples
+- **[DEPENDENCY_SETUP.md](DEPENDENCY_SETUP.md)** - How to add TCAKit as a dependency
+
+### 📚 **Detailed Learning**
 1. **Choose an example** that matches your experience level
 2. **Read the example's README** for detailed explanations
 3. **Copy the code** into your own SwiftUI project

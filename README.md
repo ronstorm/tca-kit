@@ -33,9 +33,20 @@ Then add it to your target:
 ```swift
 .target(
     name: "YourTarget",
-    dependencies: ["TCAKit"]
+    dependencies: [.product(name: "TCAKit", package: "tca-kit")]
 )
 ```
+
+### Xcode
+
+1. **File → Add Package Dependencies**
+2. **Enter URL**: `https://github.com/ronstorm/tca-kit.git`
+3. **Select version**: Latest or specific version
+4. **Add to target**: Your app target
+
+### Troubleshooting
+
+Having issues with dependency setup? Check out our [Dependency Setup Guide](Examples/DEPENDENCY_SETUP.md) for detailed instructions and common solutions.
 
 ## Usage
 
