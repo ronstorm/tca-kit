@@ -34,20 +34,17 @@ if [ -n "$(git status --porcelain)" ]; then
 fi
 
 # Check if tag already exists
-if git tag -l | grep -q "^$VERSION$"; then
+if git rev-parse "$VERSION" >/dev/null 2>&1; then
     echo "❌ Error: Tag $VERSION already exists"
     exit 1
 fi
 
+# Pre-release checks
 echo "✅ Pre-release checks passed"
 
 # Run tests
 echo "🧪 Running tests..."
 swift test
-if [ $? -ne 0 ]; then
-    echo "❌ Error: Tests failed"
-    exit 1
-fi
 echo "✅ Tests passed"
 
 # Create and push tag
@@ -58,11 +55,9 @@ echo "✅ Tag $VERSION created and pushed"
 
 # Create GitHub release
 echo "📝 Creating GitHub release..."
-gh release create "$VERSION" \
-    --title "TCAKit $VERSION" \
-    --notes-file <(cat <<EOF
-# TCAKit $VERSION
 
+# Create release notes file
+cat > /tmp/release_notes.md << 'EOF'
 ## What's New
 
 This is the first stable release of TCAKit! 🎉
@@ -108,14 +103,25 @@ See the [Documentation](https://github.com/ronstorm/tca-kit/tree/main/Docs) for 
 
 ---
 
-**Full Changelog**: https://github.com/ronstorm/tca-kit/compare/initial-commit...$VERSION
+**Full Changelog**: https://github.com/ronstorm/tca-kit/compare/initial-commit...VERSION_PLACEHOLDER
 EOF
-)
+
+# Replace version placeholder
+sed -i '' "s/VERSION_PLACEHOLDER/$VERSION/g" /tmp/release_notes.md
+
+# Create the release
+gh release create "$VERSION" \
+    --title "TCAKit $VERSION" \
+    --notes-file /tmp/release_notes.md
+
+# Clean up
+rm /tmp/release_notes.md
+
 echo "✅ GitHub release created"
 
 echo "🎉 Release $VERSION completed successfully!"
 echo ""
 echo "Next steps:"
-echo "1. Verify the release on GitHub: https://github.com/ronstorm/tca-kit/releases"
-echo "2. Update any external documentation"
-echo "3. Announce the release to the community"
+echo "1. Check the release at: https://github.com/ronstorm/tca-kit/releases/tag/$VERSION"
+echo "2. Update your Package.swift version if needed"
+echo "3. Share the release with your community!"
