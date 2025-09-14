@@ -20,10 +20,10 @@ fi
 
 echo "🚀 Starting release process for $VERSION..."
 
-# Check if we're on main branch
+# Check if we're on master branch
 CURRENT_BRANCH=$(git branch --show-current)
-if [ "$CURRENT_BRANCH" != "main" ]; then
-    echo "❌ Error: Must be on main branch. Current branch: $CURRENT_BRANCH"
+if [ "$CURRENT_BRANCH" != "master" ]; then
+    echo "❌ Error: Must be on master branch. Current branch: $CURRENT_BRANCH"
     exit 1
 fi
 
