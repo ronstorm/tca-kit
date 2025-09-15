@@ -2,8 +2,8 @@
 
 # TCAKit
 
-[![Swift Versions](https://swiftpackageindex.com/api/packages/ronstorm/tca-kit/badge?type=swift-versions)](https://swiftpackageindex.com/ronstorm/tca-kit)
-[![Platforms](https://swiftpackageindex.com/api/packages/ronstorm/tca-kit/badge?type=platforms)](https://swiftpackageindex.com/ronstorm/tca-kit)
+[![Swift Versions](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fronstorm%2Ftca-kit%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/ronstorm/tca-kit)
+[![Platforms](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fronstorm%2Ftca-kit%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/ronstorm/tca-kit)
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/ronstorm/tca-kit/releases)
 
 </div>
