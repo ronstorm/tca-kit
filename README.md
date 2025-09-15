@@ -36,6 +36,22 @@ dependencies: [
 ]
 ```
 
+Or with CocoaPods:
+
+```ruby
+platform :ios, '15.0'
+use_frameworks!
+
+target 'YourApp' do
+  pod 'TCAKit', '~> 1.0'
+  # Optional subspecs
+  # pod 'TCAKit/CombineBridge', '~> 1.0'
+  # pod 'TCAKit/Testing', '~> 1.0'
+end
+```
+
+**CocoaPods**: [TCAKit on CocoaPods](https://cocoapods.org/pods/TCAKit)
+
 ### 2. Basic Usage
 
 ```swift
