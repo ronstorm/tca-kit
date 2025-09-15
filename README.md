@@ -12,17 +12,17 @@ A lightweight, SwiftUI-first implementation of The Composable Architecture (TCA)
 
 ## Features
 
-- 🏪 **Store**: Manages state and handles actions with @MainActor publishing
-- 🔄 **Reducer**: Pure functions that handle actions and return effects  
-- ⚡ **Effect**: Represents async side effects with cancellation support
-- 🔧 **Dependencies**: Environment-based dependency injection for services
-- 🎯 **WithStore**: SwiftUI helper for ergonomic store usage in views
-- 🧪 **TestStore**: Testing utility with fluent assertions and transcripts
-- 🔗 **CombineBridge**: Seamless integration between Combine publishers and TCAKit effects
-- 🎯 **SwiftUI-First**: Built specifically for SwiftUI with @MainActor integration
-- 📱 **Cross-platform**: iOS, macOS, tvOS, and watchOS support
-- 🚀 **Lightweight**: No external dependencies
-- ⚡ **Modern Swift**: Swift 5.9+ with Concurrency support
+- **Store**: Manages state and handles actions with @MainActor publishing
+- **Reducer**: Pure functions that handle actions and return effects  
+- **Effect**: Represents async side effects with cancellation support
+- **Dependencies**: Environment-based dependency injection for services
+- **WithStore**: SwiftUI helper for ergonomic store usage in views
+- **TestStore**: Testing utility with fluent assertions and transcripts
+- **CombineBridge**: Seamless integration between Combine publishers and TCAKit effects
+- **SwiftUI-First**: Built specifically for SwiftUI with @MainActor integration
+- **Cross-platform**: iOS, macOS, tvOS, and watchOS support
+- **Lightweight**: No external dependencies
+- **Modern Swift**: Swift 5.9+ with Concurrency support
 
 ## Quick Start
 
