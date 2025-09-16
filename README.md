@@ -108,7 +108,7 @@ struct CounterApp: App {
 
 ## Documentation
 
-📚 **[Complete Documentation](Docs/README.md)** - Comprehensive guide to TCAKit
+**[Complete Documentation](Docs/README.md)** - Comprehensive guide to TCAKit
 
 ### Core Concepts
 - **[Store](Docs/store.md)** - State management and action handling
@@ -121,17 +121,17 @@ struct CounterApp: App {
 
 Ready-to-run examples showcasing TCAKit patterns:
 
-### 🎯 [BasicCounter](Examples/BasicCounter/) - **Start Here**
+### [BasicCounter](Examples/BasicCounter/) - **Start Here**
 Simple counter app demonstrating core TCAKit concepts.
 - **Files**: `BasicCounter.swift` (standalone app)
 - **Learn**: State, actions, reducers, SwiftUI integration
 
-### 📝 [TodoList](Examples/TodoList/) - **Intermediate**
+### [TodoList](Examples/TodoList/) - **Intermediate**
 Full-featured todo list with CRUD operations and effects.
 - **Files**: `TodoList.swift` + `Models.swift` (standalone app)
 - **Learn**: Complex state, async effects, extending Dependencies, error handling
 
-### 🌤️ [WeatherApp](Examples/WeatherApp/) - **Advanced**
+### [WeatherApp](Examples/WeatherApp/) - **Advanced**
 Weather app with network requests and real-world patterns.
 - **Files**: `WeatherApp.swift` + `Models.swift` (standalone app)
 - **Learn**: Network requests, effect cancellation, extending Dependencies, complex state

@@ -301,7 +301,7 @@ We follow [Semantic Versioning](https://semver.org/):
 
 - **GitHub Issues**: For bugs and feature requests
 - **Discussions**: For questions and general discussion
-- **Email**: [opensource@ronstorm.dev](mailto:opensource@ronstorm.dev)
+- **Email**: [me@amitsen.de](mailto:me@amitsen.de)
 
 ### Recognition
 
