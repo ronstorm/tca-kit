@@ -157,4 +157,4 @@ case .searchTextChanged(let text):
 
 - [Store](store.md) - Learn how stores manage effects
 - [Dependencies](dependencies.md) - Inject services into effects
-- [Testing](testing.md) - Test effects and their outcomes
+- [TestStore](teststore.md) - Test effects and their outcomes

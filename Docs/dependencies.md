@@ -131,5 +131,5 @@ See how dependencies are used in the examples:
 ## Next Steps
 
 - [Effect](effect.md) - Learn about async effects
-- [Testing](testing.md) - Comprehensive testing strategies
+- [TestStore](teststore.md) - Comprehensive testing strategies
 - [Examples](../Examples/) - See dependencies in action

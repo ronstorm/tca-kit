@@ -120,5 +120,4 @@ let childStore = parentStore.scope(
 ## Next Steps
 
 - [Reducer](reducer.md) - Learn how reducers work
-- [Scoping](scoping.md) - Create modular architecture
 - [SwiftUI Integration](swiftui-integration.md) - Best practices

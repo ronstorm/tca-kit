@@ -291,5 +291,4 @@ struct ItemListView: View {
 ## Next Steps
 
 - [Store](store.md) - Learn more about stores
-- [Scoping](scoping.md) - Create modular architecture
 - [Examples](../Examples/) - See SwiftUI integration in action

@@ -203,4 +203,4 @@ case .submit:
 
 - [Effect](effect.md) - Learn about effects in detail
 - [Store](store.md) - See how reducers work with stores
-- [Testing](testing.md) - Test your reducers
+- [TestStore](teststore.md) - Test your reducers
