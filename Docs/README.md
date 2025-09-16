@@ -36,15 +36,6 @@ Seamless integration between Combine publishers and TCAKit effects.
 ### 📱 [SwiftUI Integration](swiftui-integration.md)
 Best practices for using TCAKit with SwiftUI.
 
-### 🎯 [Scoping](scoping.md)
-Creating child stores for modular architecture.
-
-### 🧪 [Testing](testing.md)
-Comprehensive testing strategies and patterns.
-
-### 🚀 [Performance](performance.md)
-Optimization tips and best practices.
-
 ## Examples
 
 Ready-to-run examples showcasing TCAKit patterns:
