@@ -10,30 +10,30 @@ Welcome to the TCAKit documentation! This guide will help you understand and use
 
 ## Core Concepts
 
-### 🏪 [Store](store.md)
+### [Store](store.md)
 The central component that manages state and handles actions.
 
-### 🔄 [Reducer](reducer.md)
+### [Reducer](reducer.md)
 Pure functions that handle actions and update state.
 
-### ⚡ [Effect](effect.md)
+### [Effect](effect.md)
 Represents async side effects with cancellation support.
 
-### 🔧 [Dependencies](dependencies.md)
+### [Dependencies](dependencies.md)
 Environment-based dependency injection for services.
 
-### 🎯 [WithStore](withstore.md)
+### [WithStore](withstore.md)
 SwiftUI helper for ergonomic store usage in views.
 
-### 🧪 [TestStore](teststore.md)
+### [TestStore](teststore.md)
 Testing utility with fluent assertions and transcripts.
 
-### 🔗 [CombineBridge](combine-bridge.md)
+### [CombineBridge](combine-bridge.md)
 Seamless integration between Combine publishers and TCAKit effects.
 
 ## Advanced Topics
 
-### 📱 [SwiftUI Integration](swiftui-integration.md)
+### [SwiftUI Integration](swiftui-integration.md)
 Best practices for using TCAKit with SwiftUI.
 
 ## Examples
